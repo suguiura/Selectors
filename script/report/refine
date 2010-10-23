@@ -1,0 +1,44 @@
+#!/bin/bash
+
+. config # import config
+. $SCRIPTSDIR/utils/progress # import progress
+. $SCRIPTSDIR/utils/jobqueue # import jobqueue
+
+LIST="$LISTSDIR/list.references"
+
+function check_html
+{
+  REPOSITORY=$1
+  FILE="$PAGESDIR/$REPOSITORY/$ID.html"
+  if [ -s "$FILE" ] && (cat $FILE | grep -iq "$QUERY"); then
+    echo "$ID"
+  fi
+}
+
+function check
+{
+  ID="$1"
+  SQL="select homepage from Selectors where name = '$ID';"
+  URL=$(sqlite3 $DB "$SQL" | head -1)
+  
+  QUERY="\($ID.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$ID\W\)"
+  check_html 'debian' >> $LIST
+  QUERY=$(ruby -ruri -e "puts URI.parse('$URL').host" 2> ruby.error)
+  check_html 'sf' >> $LIST
+}
+
+FINISH="rm -fr $MASTERPIPE $PROGRESS; kill -TERM -$$; echo -e '\nMay the Force be with you!'"
+trap "$FINISH" EXIT
+
+SQL="select distinct name from Projects join Selectors using (name) where not (homepage like '%sourceforge.net%' or homepage like '%sf.net%' or homepage is null or homepage = '');"
+sqlite3 -separator ' ' $DB "$SQL" | run_queue 4 "check"
+
+echo
+echo "sorting..."
+sort $LIST | uniq > $LIST.sort; mv $LIST.sort $LIST
+  
+echo
+echo "Total found: $(cat $LIST | wc -l)"
+
+eval "$FINISH"
+

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+. config # import config
+
+LIST="$LISTSDIR/list.references"
+
+function report
+{
+  FILE="$LISTSDIR/$FILENAME"
+  [ -z "$SQL" ] || sqlite3 $DB "$SQL;" > $FILE
+  echo "$1" $(cat $FILE | wc -l) "($FILENAME)"
+}
+
+SQLPROJECTS="select distinct name from Projects"
+SQLSELECTORS="select distinct name from Selectors"
+SQLJOIN="select distinct name from Selectors join Projects using (name)"
+SQLJOINHP="select distinct name, homepage from Selectors join Projects using (name)"
+NOHPCONDITION="(homepage is null or homepage = '')"
+SFHPCONDITION="(homepage like '%sourceforge.net%' or homepage like '%sf.net%')"
+
+
+SQL="$SQLJOINHP where not $SFHPCONDITION and not $NOHPCONDITION"
+sqlite3 $DB "select name from ($SQL);" | sort | \
+diff --changed-group-format='%=' --unchanged-group-format='' \
+- $LISTSDIR/list.references > $LISTSDIR/list.noreferences
+
+FILENAME="list.projects"; SQL="$SQLPROJECTS"
+report "Projects (SourceForge):"
+FILENAME="list.selectors"; SQL="$SQLSELECTORS"
+report "Selectors (Debian 5.0.6-i386-main):"
+FILENAME="list.difference"; SQL="$SQLPROJECTS union $SQLSELECTORS except $SQLJOIN"
+report "Identifiers (project/selector) symmetric difference:"
+FILENAME="list.intersection"; SQL="$SQLJOIN"
+report "Identifiers (project/selector) intersection:"
+FILENAME="list.nohomepage"; SQL="$SQLJOINHP where $NOHPCONDITION"
+report "... no homepage (seletor):"
+FILENAME="list.homepage"; SQL="$SQLJOINHP where not $NOHPCONDITION"
+report "... with homepage (seletor):"
+FILENAME="list.subsourceforge"; SQL="$SQLJOINHP where $SFHPCONDITION"
+report "... ... with SF substring (seletor URL):"
+FILENAME="list.nosubsourceforge"; SQL="$SQLJOINHP where not $SFHPCONDITION and not $NOHPCONDITION"
+report "... ... no SF substring (seletor URL):"
+FILENAME="list.references"; SQL=""
+report "... ... ... with references to counterpart (selector/projects homepages):"
+FILENAME="list.noreferences"; SQL=""
+report "... ... ... no references to counterpart (selector/projects homepages):"
+

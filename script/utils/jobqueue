@@ -1,0 +1,44 @@
+#!/bin/bash
+
+MASTERPIPE="$WORKDIR/$$.masterpipe"
+TMPFILES+=" $MASTERPIPE"
+
+mkfifo $MASTERPIPE
+
+function slave
+{
+#  trap "echo '  abort:$ID'" TERM
+  $FUNCTION "$X"
+  progress "${#SET[@]}"
+  (echo > $MASTERPIPE) &
+}
+
+function master
+{
+  for X in ${SET[@]}; do
+    (read < $MASTERPIPE)
+    (slave)&
+  done
+
+  wait #Waits unfinished slaves
+}
+
+function run_queue
+{
+  NJOBS="$1"
+  FUNCTION="$2"
+
+  declare -a SET=( $(while read LINE; do echo "$LINE"; done) )
+  
+  (master)&
+
+  JOBS=$( (echo "$NJOBS ${#SET[@]}") | tr ' ' "\n" | sort -n | head -1 ) # min(NJOBS, NSET)
+  seq $JOBS | while read; do
+    (echo > $MASTERPIPE)&
+    sleep 0.2
+  done
+
+  wait
+}
+
+

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: data/download_homepages'; exit)
+. $PWD/config # import config
+
+. $SCRIPTSDIR/utils/progress # import progress
+. $SCRIPTSDIR/utils/jobqueue # import jobqueue
+
+SUCCESS="$WORKDIR/$$.success"
+TMPFILES=" $SUCCESS"
+
+function download
+{
+  REPOSITORY="$1"; URL="$(echo $2 | sed 's/<\(.*\)>/\1/g')"
+  FILE=$PAGESDIR/$REPOSITORY/$ID.html
+  ([ -s "$FILE" ] || [ -z "$URL" ]) && return
+  (wget -t 3 -qO - "$URL" > $FILE)
+  [ -s "$FILE" ] && (echo "$ID $URL $FILE" >> $SUCCESS)
+}
+
+function download_all
+{
+  ID=$1
+  SQL="select homepage from Selectors where name = '$ID'"
+  download 'debian' $(sqlite3 $DB "$SQL;")
+  download 'sf' "http://sourceforge.net/projects/$ID"
+}
+
+FINISH="kill -TERM -$$; rm -fr $TMPFILES; echo -e '\nMay the Force be with you!'"
+trap "$FINISH" EXIT
+
+echo -n > $SUCCESS
+
+SQL="select distinct name from Selectors join Projects using (name);"
+sqlite3 $DB "$SQL" | run_queue 128 "download_all"
+
+echo
+echo "New pages:"
+cat $SUCCESS
+echo "Total found: $(cat $SUCCESS | wc -l)"
+
+eval "$FINISH"
+

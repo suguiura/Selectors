@@ -1,0 +1,16 @@
+#!/bin/bash
+
+PROGRESS="$WORKDIR/$$.progress"
+TMPFILES+=" $PROGRESS"
+
+echo -n > $PROGRESS
+
+function progress
+{
+  TOTAL="$1"
+  LENGTH=$(echo "$TOTAL" | wc -c)
+  echo >> $PROGRESS
+  CURRENT="$(cat $PROGRESS | wc -l)"
+  printf "\rProgress: %${LENGTH}d/$TOTAL" "$CURRENT"
+}
+

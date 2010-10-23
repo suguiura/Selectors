@@ -1,0 +1,130 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/debian/all_sql'; exit)
+. $PWD/config # import config
+
+DISTRIBUTION='debian'
+
+function insert_distribution
+{
+  echo "insert or ignore into Distributions (name) values ('$DISTRIBUTION');"
+}
+
+function insert_architectures
+{
+  for ARCHITECTURE in $ARCHITECTURES; do
+    echo "insert or ignore into Architectures (name) values ('$ARCHITECTURE');"
+  done
+}
+
+function insert_releases
+{
+  for ARCHITECTURE in $ARCHITECTURES; do
+    echo "insert or ignore into Releases select null, Distributions.id, Architectures.id, ${RELEASE[version]}, ${RELEASE[date]}, ${RELEASE[codename]}, ${RELEASE[status]}, ${RELEASE[description]} from Distributions, Architectures where Distributions.name = '$DISTRIBUTION' and Architectures.name = '$ARCHITECTURE';"
+  done
+}
+
+function insert_selector_maintainer
+{
+  echo "insert or ignore into Maintainers values (null, ${PACKAGE[mname]}, ${PACKAGE[mmail]});"
+}
+
+function insert_selector_section
+{
+  echo "insert or ignore into Categories (name) values (${PACKAGE[section]});"
+}
+
+function insert_selector
+{
+  echo "insert or ignore into Selectors select null, Categories.id, Maintainers.id, ${PACKAGE[name]}, ${PACKAGE[version]}, ${PACKAGE[homepage]}, ${PACKAGE[description]} from Categories, Maintainers where Maintainers.name = ${PACKAGE[mname]} and Maintainers.email = ${PACKAGE[mmail]} and Categories.name = ${PACKAGE[section]};"
+}
+
+function insert_selector_into_release
+{
+  echo "insert or ignore into Releases_have_Selectors select r.id, s.id from ReleasesView as r, SelectorsView as s where r.version = ${RELEASE[version]} and r.architecture = '$ARCHITECTURE' and r.distribution = '$DISTRIBUTION' and s.name = ${PACKAGE[name]} and s.version = ${PACKAGE[version]} and s.category = ${PACKAGE[section]};"
+}
+
+function parse
+{
+  FILE="$1"
+
+  declare -a ATTRIBUTES=('name' 'section' 'version' 'homepage' 'description' 'mname' 'mmail')
+  declare -A PACKAGE
+  
+  zcat "$REPOSITORY/$FILE" | \
+  sed "s/'/''/g" | \
+  sed ':a;N;$!ba;s/\n /\\\\n /g' | \
+  sed 's/^Maintainer: \(.*\) <\(.*\)>$/MaintainerName: \1\nMaintainerEmail: \2/g' | \
+  sed 's/^\(Section: \).*\/\(.*\)$/\1\2/g' | \
+  sed 's/\(^Description:.*\)\(Homepage:[^\\]*\)\(.*\)/\1\3\n\2/g' | \
+  while read KEY VALUE; do
+    case "$KEY" in
+      Package:) PACKAGE[name]="'$VALUE'";;
+      Version:) PACKAGE[version]="'$VALUE'";;
+      Section:) PACKAGE[section]="'$VALUE'";;
+      MaintainerName:) PACKAGE[mname]="'$VALUE'";;
+      MaintainerEmail:) PACKAGE[mmail]="'$VALUE'";;
+      Homepage:) PACKAGE[homepage]="'$VALUE'";;
+      Description:) PACKAGE[description]="'$VALUE'";;
+#      Source:) PACKAGE[source]="'$VALUE'";;
+      '')
+        for ATTRIBUTE in ${ATTRIBUTES[@]}; do
+          PACKAGE[$ATTRIBUTE]=${PACKAGE[$ATTRIBUTE]:-null}
+        done
+        insert_selector_maintainer
+        insert_selector_section
+        insert_selector
+        insert_selector_into_release
+        unset PACKAGE
+        declare -A PACKAGE;;
+    esac
+  done
+}
+
+function parse_release
+{
+  HASH=0
+  declare -A RELEASE
+  while read KEY VALUE; do
+    case "$HASH" in
+      0)case "$KEY" in
+          Version:) RELEASE[version]="'$VALUE'";;
+          Suite:) RELEASE[status]="'$VALUE'";;
+          Codename:) RELEASE[codename]="'$VALUE'";;
+          Date:) RELEASE[date]="'$VALUE'";;
+          Architectures:) ARCHITECTURES="all $VALUE";;
+          Components:) REPOSITORIES="$VALUE";;
+          Description:) RELEASE[description]="'$VALUE'";;
+          MD5Sum:) HASH=1;;
+        esac;;
+      1)case "$VALUE" in
+          '') break;;
+          *Packages.gz) ;;
+          *Release) ;;
+          *) continue;;
+        esac
+        FILE=$(echo "$VALUE" | cut -d\  -f2)
+        echo "$KEY  $FILE" | md5sum --quiet -c - || exit 1;;
+    esac
+  done
+
+  insert_distribution
+  insert_architectures
+  insert_releases
+
+  REPOSITORIES=main
+  ARCHITECTURES=i386
+  for REPOSITORY in $REPOSITORIES; do
+#    parse "source/Sources.gz" &
+    for ARCHITECTURE in ${ARCHITECTURES#all}; do
+      parse "binary-$ARCHITECTURE/Packages.gz"
+    done
+  done
+}
+
+for RELEASE in "lenny"; do
+  cd $DATADIR/$DISTRIBUTION/dists/$RELEASE/ || continue
+  cat Release | parse_release
+done
+

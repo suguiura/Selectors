@@ -1,0 +1,29 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/prepare'; exit)
+. $PWD/config # import config
+
+SCHEMASQL="$DBDIR/schema.sql"
+VIEWSSQL="$DBDIR/views.sql"
+DEBIANSQL="$WORKDIR/debian.sql"
+DBOSSSQL="$WORKDIR/dboss.sql"
+
+date
+
+echo 'Cleaning'
+rm -f $DEBIANSQL{,.log} $DBOSSSQL{,.log} $DB
+
+echo 'Creating DB'
+[ -s $SCHEMASQL ] || exit 1 #checks schema SQL
+cat $SCHEMASQL | sqlite3 $DB #loads schema SQL
+cat $VIEWSSQL | sqlite3 $DB #loads views SQL
+
+echo 'Populating DB'
+sh $SCRIPTDIR/db/debian/all_sql | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
+sh $SCRIPTDIR/db/dboss/projects_sql | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+
+ls -lh $WORKDIR/
+
+date
+
