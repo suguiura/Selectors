@@ -37,7 +37,7 @@ function insert_selector_section
 
 function insert_selector
 {
-  echo "insert or ignore into Selectors select null, Categories.id, Maintainers.id, ${PACKAGE[name]}, ${PACKAGE[version]}, ${PACKAGE[homepage]}, ${PACKAGE[description]} from Categories, Maintainers where Maintainers.name = ${PACKAGE[mname]} and Maintainers.email = ${PACKAGE[mmail]} and Categories.name = ${PACKAGE[section]};"
+  echo "insert or ignore into Selectors select null, Categories.id, Maintainers.id, ${PACKAGE[name]}, ${PACKAGE[version]}, ${PACKAGE[origin]}, ${PACKAGE[homepage]}, ${PACKAGE[description]} from Categories, Maintainers where Maintainers.name = ${PACKAGE[mname]} and Maintainers.email = ${PACKAGE[mmail]} and Categories.name = ${PACKAGE[section]};"
 }
 
 function insert_selector_into_release
@@ -47,12 +47,10 @@ function insert_selector_into_release
 
 function parse
 {
-  FILE="$1"
-
-  declare -a ATTRIBUTES=('name' 'section' 'version' 'homepage' 'description' 'mname' 'mmail')
+  declare -a ATTRIBUTES=('name' 'section' 'version' 'origin' 'homepage' 'description' 'mname' 'mmail')
   declare -A PACKAGE
   
-  zcat "$REPOSITORY/$FILE" | \
+  zcat "$FILE" | \
   sed "s/'/''/g" | \
   sed ':a;N;$!ba;s/\n /\\\\n /g' | \
   sed 's/^Maintainer: \(.*\) <\(.*\)>$/MaintainerName: \1\nMaintainerEmail: \2/g' | \
@@ -67,17 +65,20 @@ function parse
       MaintainerEmail:) PACKAGE[mmail]="'$VALUE'";;
       Homepage:) PACKAGE[homepage]="'$VALUE'";;
       Description:) PACKAGE[description]="'$VALUE'";;
-#      Source:) PACKAGE[source]="'$VALUE'";;
+      Source:) PACKAGE[origin]="'$VALUE'";;
       '')
         for ATTRIBUTE in ${ATTRIBUTES[@]}; do
           PACKAGE[$ATTRIBUTE]=${PACKAGE[$ATTRIBUTE]:-null}
         done
+        
         insert_selector_maintainer
         insert_selector_section
         insert_selector
         insert_selector_into_release
+        
         unset PACKAGE
-        declare -A PACKAGE;;
+        declare -A PACKAGE
+        ;;
     esac
   done
 }
@@ -87,25 +88,14 @@ function parse_release
   HASH=0
   declare -A RELEASE
   while read KEY VALUE; do
-    case "$HASH" in
-      0)case "$KEY" in
-          Version:) RELEASE[version]="'$VALUE'";;
-          Suite:) RELEASE[status]="'$VALUE'";;
-          Codename:) RELEASE[codename]="'$VALUE'";;
-          Date:) RELEASE[date]="'$VALUE'";;
-          Architectures:) ARCHITECTURES="all $VALUE";;
-          Components:) REPOSITORIES="$VALUE";;
-          Description:) RELEASE[description]="'$VALUE'";;
-          MD5Sum:) HASH=1;;
-        esac;;
-      1)case "$VALUE" in
-          '') break;;
-          *Packages.gz) ;;
-          *Release) ;;
-          *) continue;;
-        esac
-        FILE=$(echo "$VALUE" | cut -d\  -f2)
-        echo "$KEY  $FILE" | md5sum --quiet -c - || exit 1;;
+    case "$KEY" in
+      Version:) RELEASE[version]="'$VALUE'";;
+      Suite:) RELEASE[status]="'$VALUE'";;
+      Codename:) RELEASE[codename]="'$VALUE'";;
+      Date:) RELEASE[date]="'$VALUE'";;
+      Architectures:) ARCHITECTURES="all $VALUE";;
+      Components:) REPOSITORIES="$VALUE";;
+      Description:) RELEASE[description]="'$VALUE'";;
     esac
   done
 
@@ -118,13 +108,13 @@ function parse_release
   for REPOSITORY in $REPOSITORIES; do
 #    parse "source/Sources.gz" &
     for ARCHITECTURE in ${ARCHITECTURES#all}; do
-      parse "binary-$ARCHITECTURE/Packages.gz"
+      FILE="$DIR/$REPOSITORY/binary-$ARCHITECTURE/Packages.gz"
+      parse
     done
   done
 }
 
-for RELEASE in "lenny"; do
-  cd $DATADIR/$DISTRIBUTION/dists/$RELEASE/ || continue
-  cat Release | parse_release
+for DIR in $DATADIR/debian/dists/lenny; do
+  cat $DIR/Release | parse_release
 done
 

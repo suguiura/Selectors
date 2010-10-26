@@ -1,0 +1,33 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: data/debian/check_metadata'; exit)
+. $PWD/config # import config
+
+function parse_release
+{
+  HASH=0
+  declare -A RELEASE
+  while read KEY VALUE; do
+    case "$HASH" in
+      0)case "$KEY" in
+          MD5Sum:) HASH=1;;
+        esac;;
+      1)case "$VALUE" in
+          '') break;;
+          *Packages.gz) ;;
+          *Release) ;;
+          *) continue;;
+        esac
+        FILE=$DIR/$(echo "$VALUE" | cut -d\  -f2)
+        echo "$KEY  $FILE" | md5sum --quiet -c - || (echo 'Debian data fail'; exit 1);;
+    esac
+  done
+}
+
+for DIR in $DATADIR/debian/dists/*; do
+  cat $DIR/Release | parse_release
+done
+
+echo 'Debian data ok'
+
