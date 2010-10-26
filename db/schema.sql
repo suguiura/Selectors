@@ -2,7 +2,7 @@
 -- Author:        Rafael S. Suguiura
 -- Caption:       LDTM DB Model
 -- Project:       Linux Distributions Treasure Map
--- Changed:       2010-10-26 14:37
+-- Changed:       2010-10-26 19:12
 -- Created:       2010-07-28 13:51
 PRAGMA foreign_keys = OFF;
 
@@ -203,7 +203,7 @@ CREATE TABLE "FileStatistics"(
     REFERENCES "FileServers_have_Files"("fileserver_id","file_id")
 );
 CREATE INDEX "FileStatistics.fk_fileservers_have_files" ON "FileStatistics"("fileserver_id","file_id");
-CREATE TABLE "PackageStatistics"(
+CREATE TABLE "SelectorStatistics"(
   "id" VARCHAR(255) PRIMARY KEY NOT NULL,
   "selector_id" INTEGER NOT NULL,
   "date" DATE,
@@ -214,5 +214,5 @@ CREATE TABLE "PackageStatistics"(
     FOREIGN KEY("selector_id")
     REFERENCES "Selectors"("id")
 );
-CREATE INDEX "PackageStatistics.fk_selectors" ON "PackageStatistics"("selector_id");
+CREATE INDEX "SelectorStatistics.fk_selectors" ON "SelectorStatistics"("selector_id");
 COMMIT;
