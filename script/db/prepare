@@ -26,8 +26,8 @@ cat $SCHEMASQL | sqlite3 $DB #loads schema SQL
 cat $VIEWSSQL | sqlite3 $DB #loads views SQL
 
 echo 'Populating DB'
-sh $SCRIPTDIR/db/debian/all_sql | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
-sh $SCRIPTDIR/db/dboss/projects_sql | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+sh $SCRIPTDIR/db/debian/import_packages | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
+sh $SCRIPTDIR/db/dboss/import_categories | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
 
 ls -lh $WORKDIR/
 
