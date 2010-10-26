@@ -7,7 +7,7 @@
 #getpackages 'debian' 'ftp://ftp.br.debian.org' 'lenny' 'main contrib non-free' 'i386 amd64 ia64'
 #getpackages 'ubuntu' 'http://archive.canonical.com' 'lucid' 'partner' 'i386 amd64 ia64'
 
-rsync -avmz --include "Packages.gz" --include "Sources.gz" --include "Release" --include "*/" --exclude "*" ftp.br.debian.org::debian/dists $DEBIANDATA
-rsync -avmz --include "*.list.gz" --include "*/" --exclude "*" ftp.br.debian.org::debian-cd/5.0.6 $DEBIANDATA
-rsync -avmz --include "*.packages" --include "*/" --exclude "*" ftp.br.debian.org::debian-cd/5.0.6-live $DEBIANDATA
+rsync -avmz --include "Packages.gz" --include "Sources.gz" --include "Release" --include "*/" --exclude "*" ftp.br.debian.org::debian/dists $DEBIANDATADIR
+rsync -avmz --include "*.list.gz" --include "*/" --exclude "*" ftp.br.debian.org::debian-cd/5.0.6 $DEBIANDATADIR
+rsync -avmz --include "*.packages" --include "*/" --exclude "*" ftp.br.debian.org::debian-cd/5.0.6-live $DEBIANDATADIR
 

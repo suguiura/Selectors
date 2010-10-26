@@ -6,15 +6,16 @@
 
 # Directories
 BASEDIR='/home/rafael/ic/distros'
+
 WORKDIR="$BASEDIR/work"
 DATADIR="$BASEDIR/data"
 DBDIR="$BASEDIR/db"
 SCRIPTDIR="$BASEDIR/script"
 
 # Data Directories
-DEBIANDATA="$DATADIR/debian"
-LISTSDIR="$DATADIR/lists"
-PAGESDIR="$DATADIR/pages"
+DEBIANDATADIR="$DATADIR/debian"
+LISTDATADIR="$DATADIR/lists"
+PAGEDATADIR="$DATADIR/pages"
 
 
 # Files

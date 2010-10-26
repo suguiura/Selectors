@@ -4,8 +4,8 @@
 (echo 'From the script directory, run: data/download_homepages'; exit)
 . $PWD/config # import config
 
-. $SCRIPTSDIR/utils/progress # import progress
-. $SCRIPTSDIR/utils/jobqueue # import jobqueue
+. $SCRIPTDIR/utils/progress # import progress
+. $SCRIPTDIR/utils/jobqueue # import jobqueue
 
 SUCCESS="$WORKDIR/$$.success"
 TMPFILES=" $SUCCESS"
@@ -13,7 +13,7 @@ TMPFILES=" $SUCCESS"
 function download
 {
   REPOSITORY="$1"; URL="$(echo $2 | sed 's/<\(.*\)>/\1/g')"
-  FILE=$PAGESDIR/$REPOSITORY/$ID.html
+  FILE=$PAGEDATADIR/$REPOSITORY/$ID.html
   ([ -s "$FILE" ] || [ -z "$URL" ]) && return
   (wget -t 3 -qO - "$URL" > $FILE)
   [ -s "$FILE" ] && (echo "$ID $URL $FILE" >> $SUCCESS)

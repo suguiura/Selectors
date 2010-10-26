@@ -1,15 +1,18 @@
 #!/bin/bash
 
-. config # import config
-. $SCRIPTSDIR/utils/progress # import progress
-. $SCRIPTSDIR/utils/jobqueue # import jobqueue
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: report/refine'; exit)
+. $PWD/config # import config
 
-LIST="$LISTSDIR/list.references"
+. $SCRIPTDIR/utils/progress # import progress
+. $SCRIPTDIR/utils/jobqueue # import jobqueue
+
+LIST="$LISTDATADIR/list.references"
 
 function check_html
 {
   REPOSITORY=$1
-  FILE="$PAGESDIR/$REPOSITORY/$ID.html"
+  FILE="$PAGEDATADIR/$REPOSITORY/$ID.html"
   if [ -s "$FILE" ] && (cat $FILE | grep -iq "$QUERY"); then
     echo "$ID"
   fi
@@ -39,6 +42,4 @@ sort $LIST | uniq > $LIST.sort; mv $LIST.sort $LIST
   
 echo
 echo "Total found: $(cat $LIST | wc -l)"
-
-eval "$FINISH"
 
