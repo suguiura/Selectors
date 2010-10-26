@@ -2,7 +2,7 @@
 -- Author:        Rafael S. Suguiura
 -- Caption:       LDTM DB Model
 -- Project:       Linux Distributions Treasure Map
--- Changed:       2010-10-14 23:27
+-- Changed:       2010-10-26 14:37
 -- Created:       2010-07-28 13:51
 PRAGMA foreign_keys = OFF;
 
@@ -59,7 +59,7 @@ CREATE TABLE "Releases"(
   "status" VARCHAR(255),
   "description" VARCHAR(255),
   CONSTRAINT "uq_versions"
-    UNIQUE("distribution_id","architecture_id","version"),
+    UNIQUE("distribution_id","architecture_id","version","date","status"),
   CONSTRAINT "fk_distributions"
     FOREIGN KEY("distribution_id")
     REFERENCES "Distributions"("id"),
@@ -120,6 +120,7 @@ CREATE TABLE "Selectors"(
   "maintainer_id" INTEGER NOT NULL,
   "name" VARCHAR(255) NOT NULL,
   "version" VARCHAR(255) NOT NULL,
+  "origin" VARCHAR(255),
   "homepage" VARCHAR(255),
   "description" TEXT,
   CONSTRAINT "uq_selectors"
@@ -205,11 +206,10 @@ CREATE INDEX "FileStatistics.fk_fileservers_have_files" ON "FileStatistics"("fil
 CREATE TABLE "PackageStatistics"(
   "id" VARCHAR(255) PRIMARY KEY NOT NULL,
   "selector_id" INTEGER NOT NULL,
-  "interval_begin" VARCHAR(255) NOT NULL,
-  "interval_days" VARCHAR(255) NOT NULL,
+  "date" DATE,
   "installations" INTEGER,
   CONSTRAINT "uq_packagestatistics"
-    UNIQUE("selector_id","interval_begin","interval_days"),
+    UNIQUE("selector_id","date"),
   CONSTRAINT "fk_selectors"
     FOREIGN KEY("selector_id")
     REFERENCES "Selectors"("id")
