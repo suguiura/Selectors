@@ -8,11 +8,17 @@ SCHEMASQL="$DBDIR/schema.sql"
 VIEWSSQL="$DBDIR/views.sql"
 DEBIANSQL="$WORKDIR/debian.sql"
 DBOSSSQL="$WORKDIR/dboss.sql"
+GITIGNORE="$WORKDIR/.gitignore"
 
 date
 
+ALLFILES="$DEBIANSQL{,.log} $DBOSSSQL{,.log} $DB $GITIGNORE"
+
 echo 'Cleaning'
-rm -f $DEBIANSQL{,.log} $DBOSSSQL{,.log} $DB
+rm -f $ALLFILES
+
+echo 'Creating .gitignore'
+cat $GITIGNORE <(echo "$ALLFILES" | tr ' ' "\n") | sort | uniq > $GITIGNORE
 
 echo 'Creating DB'
 [ -s $SCHEMASQL ] || exit 1 #checks schema SQL
