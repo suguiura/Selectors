@@ -10,9 +10,9 @@ DEBIANSQL="$WORKDIR/debian.sql"
 DBOSSSQL="$WORKDIR/dboss.sql"
 GITIGNORE="$WORKDIR/.gitignore"
 
-date
+ALLFILES=$(echo $DEBIANSQL{,.log} $DBOSSSQL{,.log} $DB $GITIGNORE)
 
-ALLFILES="$DEBIANSQL{,.log} $DBOSSSQL{,.log} $DB $GITIGNORE"
+date
 
 echo 'Cleaning'
 rm -f $ALLFILES
