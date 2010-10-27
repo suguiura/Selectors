@@ -42,7 +42,7 @@ function insert_selector
 
 function insert_selector_into_release
 {
-  echo "insert or ignore into Releases_have_Selectors select r.id, s.id from ReleasesView as r, SelectorsView as s where r.version = ${RELEASE[version]} and r.architecture = '$ARCHITECTURE' and r.distribution = '$DISTRIBUTION' and s.name = ${PACKAGE[name]} and s.version = ${PACKAGE[version]} and s.category = ${PACKAGE[section]};"
+  echo "insert or ignore into Releases_have_Selectors select r.id, s.id from ReleasesView as r, SelectorsCategoryView as s where r.version = ${RELEASE[version]} and r.architecture = '$ARCHITECTURE' and r.distribution = '$DISTRIBUTION' and s.name = ${PACKAGE[name]} and s.version = ${PACKAGE[version]} and s.category = ${PACKAGE[section]};"
 }
 
 function parse
