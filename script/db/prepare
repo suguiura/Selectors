@@ -12,8 +12,6 @@ GITIGNORE="$WORKDIR/.gitignore"
 
 ALLFILES=$(echo $DEBIANSQL{,.log} $DBOSSSQL{,.log} $DB $GITIGNORE)
 
-date
-
 echo 'Cleaning'
 rm -f $ALLFILES
 
@@ -25,11 +23,15 @@ echo 'Creating DB'
 cat $SCHEMASQL | sqlite3 $DB #loads schema SQL
 cat $VIEWSSQL | sqlite3 $DB #loads views SQL
 
-echo 'Populating DB'
+echo; date; echo 'Importing Debian metadata'
 sh $SCRIPTDIR/db/debian/import_packages | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
+
+echo; date; echo 'Importing Popcon data'
+sh $SCRIPTDIR/db/debian/import_popcon | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
+
+echo; date; echo 'Importing Dboss categories'
 sh $SCRIPTDIR/db/dboss/import_categories | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
 
+echo; date
 ls -lh $WORKDIR/
-
-date
 

@@ -8,9 +8,9 @@ LIST="$LISTDATADIR/list.references"
 
 function report
 {
-  FILE="$LISTDATADIR/$FILENAME"
+  FILE="$LISTDATADIR/$1.list"
   [ -z "$SQL" ] || sqlite3 $DB "$SQL;" > $FILE
-  echo "$1" $(cat $FILE | wc -l) "($FILENAME)"
+  echo "$DESCRIPTION" $(cat $FILE | wc -l) "($FILENAME)"
 }
 
 SQLPROJECTS="select distinct name from Projects"
@@ -26,24 +26,43 @@ sqlite3 $DB "select name from ($SQL);" | sort | \
 diff --changed-group-format='%=' --unchanged-group-format='' \
 - $LISTDATADIR/list.references > $LISTDATADIR/list.noreferences
 
-FILENAME="list.projects"; SQL="$SQLPROJECTS"
-report "Projects (SourceForge):"
-FILENAME="list.selectors"; SQL="$SQLSELECTORS"
-report "Selectors (Debian 5.0.6-i386-main):"
-FILENAME="list.difference"; SQL="$SQLPROJECTS union $SQLSELECTORS except $SQLJOIN"
-report "Identifiers (project/selector) symmetric difference:"
-FILENAME="list.intersection"; SQL="$SQLJOIN"
-report "Identifiers (project/selector) intersection:"
-FILENAME="list.nohomepage"; SQL="$SQLJOINHP where $NOHPCONDITION"
-report "... no homepage (seletor):"
-FILENAME="list.homepage"; SQL="$SQLJOINHP where not $NOHPCONDITION"
-report "... with homepage (seletor):"
-FILENAME="list.subsourceforge"; SQL="$SQLJOINHP where $SFHPCONDITION"
-report "... ... with SF substring (seletor URL):"
-FILENAME="list.nosubsourceforge"; SQL="$SQLJOINHP where not $SFHPCONDITION and not $NOHPCONDITION"
-report "... ... no SF substring (seletor URL):"
-FILENAME="list.references"; SQL=""
-report "... ... ... with references to counterpart (selector/projects homepages):"
-FILENAME="list.noreferences"; SQL=""
-report "... ... ... no references to counterpart (selector/projects homepages):"
+SQL="$SQLPROJECTS"
+DESCRIPTION='Projects (SourceForge):'
+report 'projects'
+
+SQL="$SQLSELECTORS"
+DESCRIPTION='Selectors (Debian 5.0.6-i386-main):'
+report 'selectors'
+
+SQL="$SQLPROJECTS union $SQLSELECTORS except $SQLJOIN"
+DESCRIPTION='Identifiers (project/selector) symmetric difference:'
+report 'difference'
+
+SQL="$SQLJOIN"
+DESCRIPTION='Identifiers (project/selector) intersection:'
+report 'intersection'
+
+SQL="$SQLJOINHP where $NOHPCONDITION"
+DESCRIPTION='... no homepage (seletor):'
+report 'nohomepage'
+
+SQL="$SQLJOINHP where not $NOHPCONDITION"
+DESCRIPTION='... with homepage (seletor):'
+report 'homepage'
+
+SQL="$SQLJOINHP where $SFHPCONDITION"
+DESCRIPTION='... ... with SF substring (seletor URL):'
+report 'subsourceforge'
+
+SQL="$SQLJOINHP where not $SFHPCONDITION and not $NOHPCONDITION"
+DESCRIPTION='... ... no SF substring (seletor URL):'
+report 'nosubsourceforge'
+
+SQL=''
+DESCRIPTION='... ... ... with references to counterpart (selector/projects homepages):'
+report 'references'
+
+SQL=''
+DESCRIPTION='... ... ... no references to counterpart (selector/projects homepages):'
+report 'noreferences'
 
