@@ -4,15 +4,6 @@
 (echo 'From the script directory, run: report/summary'; exit)
 . $PWD/config # import config
 
-LIST="$LISTDATADIR/list.references"
-
-function report
-{
-  FILE="$LISTDATADIR/$1.list"
-  [ -z "$SQL" ] || sqlite3 $DB "$SQL;" > $FILE
-  echo "$DESCRIPTION" $(cat $FILE | wc -l) "($FILENAME)"
-}
-
 SQLPROJECTS="select distinct name from Projects"
 SQLSELECTORS="select distinct name from Selectors"
 SQLJOIN="select distinct name from Selectors join Projects using (name)"
@@ -20,11 +11,18 @@ SQLJOINHP="select distinct name, homepage from Selectors join Projects using (na
 NOHPCONDITION="(homepage is null or homepage = '')"
 SFHPCONDITION="(homepage like '%sourceforge.net%' or homepage like '%sf.net%')"
 
-
 SQL="$SQLJOINHP where not $SFHPCONDITION and not $NOHPCONDITION"
 sqlite3 $DB "select name from ($SQL);" | sort | \
 diff --changed-group-format='%=' --unchanged-group-format='' \
-- $LISTDATADIR/list.references > $LISTDATADIR/list.noreferences
+- $LISTDATADIR/references.list > $LISTDATADIR/noreferences.list
+
+
+function report
+{
+  FILE="$LISTDATADIR/$1.list"
+  [ -z "$SQL" ] || sqlite3 $DB "$SQL;" > $FILE
+  echo "$DESCRIPTION" $(cat $FILE | wc -l) "($1)"
+}
 
 SQL="$SQLPROJECTS"
 DESCRIPTION='Projects (SourceForge):'

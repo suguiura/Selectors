@@ -7,7 +7,8 @@
 . $SCRIPTDIR/utils/progress # import progress
 . $SCRIPTDIR/utils/jobqueue # import jobqueue
 
-LIST="$LISTDATADIR/list.references"
+JOBS=8
+LIST="$LISTDATADIR/references.list"
 
 function check_html
 {
@@ -33,10 +34,12 @@ function check
 FINISH="rm -fr $MASTERPIPE $PROGRESS; kill -TERM -$$; echo -e '\nMay the Force be with you!'"
 trap "$FINISH" EXIT
 
+date
 SQL="select distinct name from Projects join Selectors using (name) where not (homepage like '%sourceforge.net%' or homepage like '%sf.net%' or homepage is null or homepage = '');"
-sqlite3 -separator ' ' $DB "$SQL" | run_queue 4 "check"
+sqlite3 -separator ' ' $DB "$SQL" | run_queue $JOBS "check"; echo
 
 echo
+date
 echo "sorting..."
 sort $LIST | uniq > $LIST.sort; mv $LIST.sort $LIST
   
