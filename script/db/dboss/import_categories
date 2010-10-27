@@ -4,7 +4,7 @@
 (echo 'From the script directory, run: db/dboss/projects_sql'; exit)
 . $PWD/config # import config
 
-cat $DATADIR/dboss/sourceforge/proj_topics.csv | \
+cat ${DIRECTORY[data]}/dboss/sourceforge/proj_topics.csv | \
 tr "[:upper:]" "[:lower:]" | \
 sed 's/^#.*$//g' | \
 sed 's/^"\|"$//g' | \

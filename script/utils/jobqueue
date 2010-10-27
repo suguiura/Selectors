@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MASTERPIPE="$WORKDIR/$$.masterpipe"
+MASTERPIPE="${DIRECTORY[work]}/$$.masterpipe"
 TMPFILES+=" $MASTERPIPE"
 
 mkfifo $MASTERPIPE

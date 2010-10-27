@@ -114,7 +114,7 @@ function parse_release
   done
 }
 
-for DIR in $DATADIR/debian/dists/lenny; do
+for DIR in ${DIRECTORY[data]}/debian/dists/lenny; do
   cat $DIR/Release | parse_release
 done
 

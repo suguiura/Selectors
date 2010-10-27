@@ -25,7 +25,7 @@ function parse_release
   done
 }
 
-for DIR in $DATADIR/debian/dists/*; do
+for DIR in ${DIRECTORY[data]}/debian/dists/*; do
   cat $DIR/Release | parse_release
 done
 

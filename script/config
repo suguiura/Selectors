@@ -5,19 +5,14 @@
 
 
 # Directories
-BASEDIR='/home/rafael/ic/distros'
+declare -A DIRECTORY=( [base]='/home/rafael/ic/distros' )
 
-WORKDIR="$BASEDIR/work"
-DATADIR="$BASEDIR/data"
-DBDIR="$BASEDIR/db"
-SCRIPTDIR="$BASEDIR/script"
-
-# Data Directories
-DEBIANDATADIR="$DATADIR/debian"
-LISTDATADIR="$DATADIR/lists"
-PAGEDATADIR="$DATADIR/pages"
+DIRECTORY[work]="${DIRECTORY[base]}/work"
+DIRECTORY[data]="${DIRECTORY[base]}/data"
+DIRECTORY[db]="${DIRECTORY[base]}/db"
+DIRECTORY[script]="${DIRECTORY[base]}/script"
 
 
 # Files
-DB="$WORKDIR/projects.sqlite3"
+DB="${DIRECTORY[work]}/projects.sqlite3"
 

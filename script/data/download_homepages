@@ -4,16 +4,18 @@
 (echo 'From the script directory, run: data/download_homepages'; exit)
 . $PWD/config # import config
 
-. $SCRIPTDIR/utils/progress # import progress
-. $SCRIPTDIR/utils/jobqueue # import jobqueue
+. ${DIRECTORY[script]}/utils/progress # import progress
+. ${DIRECTORY[script]}/utils/jobqueue # import jobqueue
 
-SUCCESS="$WORKDIR/$$.success"
+JOBS=128
+
+SUCCESS="${DIRECTORY[work]}/$$.success"
 TMPFILES=" $SUCCESS"
 
 function download
 {
   REPOSITORY="$1"; URL="$(echo $2 | sed 's/<\(.*\)>/\1/g')"
-  FILE=$PAGEDATADIR/$REPOSITORY/$ID.html
+  FILE=${DIRECTORY[data]}/pages/$REPOSITORY/$ID.html
   ([ -s "$FILE" ] || [ -z "$URL" ]) && return
   (wget -t 3 -qO - "$URL" > $FILE)
   [ -s "$FILE" ] && (echo "$ID $URL $FILE" >> $SUCCESS)
@@ -33,7 +35,7 @@ trap "$FINISH" EXIT
 echo -n > $SUCCESS
 
 SQL="select distinct name from Selectors join Projects using (name);"
-sqlite3 $DB "$SQL" | run_queue 128 "download_all"
+sqlite3 $DB "$SQL" | run_queue $JOBS "download_all"
 
 echo
 echo "New pages:"

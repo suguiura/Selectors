@@ -4,5 +4,5 @@
 (echo 'From the script directory, run: data/debian/download_metadata'; exit)
 . $PWD/config # import config
 
-wget -P $DEBIANDATADIR http://popcon.debian.org/all-popcon-results.txt.gz
+wget -P ${DIRECTORY[data]}/debian http://popcon.debian.org/all-popcon-results.txt.gz
 

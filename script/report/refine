@@ -4,16 +4,16 @@
 (echo 'From the script directory, run: report/refine'; exit)
 . $PWD/config # import config
 
-. $SCRIPTDIR/utils/progress # import progress
-. $SCRIPTDIR/utils/jobqueue # import jobqueue
+. ${DIRECTORY[script]}/utils/progress # import progress
+. ${DIRECTORY[script]}/utils/jobqueue # import jobqueue
 
 JOBS=8
-LIST="$LISTDATADIR/references.list"
+LIST="${DIRECTORY[data]}/lists/references.list"
 
 function check_html
 {
   REPOSITORY=$1
-  FILE="$PAGEDATADIR/$REPOSITORY/$ID.html"
+  FILE="${DIRECTORY[data]}/pages/$REPOSITORY/$ID.html"
   if [ -s "$FILE" ] && (cat $FILE | grep -iq "$QUERY"); then
     echo "$ID"
   fi
@@ -31,7 +31,7 @@ function check
   check_html 'sf' >> $LIST
 }
 
-FINISH="rm -fr $MASTERPIPE $PROGRESS; kill -TERM -$$; echo -e '\nMay the Force be with you!'"
+FINISH="kill -TERM -$$; rm -fr $TMPFILES; echo -e '\nMay the Force be with you!'"
 trap "$FINISH" EXIT
 
 date

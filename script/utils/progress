@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROGRESS="$WORKDIR/$$.progress"
+PROGRESS="${DIRECTORY[work]}/$$.progress"
 TMPFILES+=" $PROGRESS"
 
 echo -n > $PROGRESS

@@ -14,12 +14,12 @@ SFHPCONDITION="(homepage like '%sourceforge.net%' or homepage like '%sf.net%')"
 SQL="$SQLJOINHP where not $SFHPCONDITION and not $NOHPCONDITION"
 sqlite3 $DB "select name from ($SQL);" | sort | \
 diff --changed-group-format='%=' --unchanged-group-format='' \
-- $LISTDATADIR/references.list > $LISTDATADIR/noreferences.list
+- ${DIRECTORY[data]}/lists/references.list > ${DIRECTORY[data]}/lists/noreferences.list
 
 
 function report
 {
-  FILE="$LISTDATADIR/$1.list"
+  FILE="${DIRECTORY[data]}/lists/$1.list"
   [ -z "$SQL" ] || sqlite3 $DB "$SQL;" > $FILE
   echo "$DESCRIPTION" $(cat $FILE | wc -l) "($1)"
 }
