@@ -1,0 +1,14 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/debian/all_sql'; exit)
+. $PWD/config # import config
+
+FILE="$DATADIR/debian/all-popcon-results.txt.gz"
+MTIME=$(echo $(date -d "$(stat -c %y $FILE)"))
+
+zcat $FILE | grep '^Package' | cut -d\  -f2- | \
+while read PACKAGE INST VOTE RECENT NOFILES; do
+  echo "insert into SelectorStatistics select null, id, '$MTIME', '$INST' from Selectors where name = '$PACKAGE';"
+done
+
