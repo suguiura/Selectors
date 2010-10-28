@@ -16,21 +16,28 @@ echo 'Cleaning'
 rm -f $ALLFILES
 
 echo 'Creating .gitignore'
-cat $GITIGNORE <(echo "$ALLFILES" | tr ' ' "\n") | sort | uniq > $GITIGNORE
+echo "$ALLFILES" | tr ' ' "\n" >> $GITIGNORE
+cat $GITIGNORE | sort | uniq > $GITIGNORE
 
 echo 'Creating DB'
 [ -s $SCHEMASQL ] || exit 1 #checks schema SQL
 cat $SCHEMASQL | sqlite3 $DB #loads schema SQL
 cat $VIEWSSQL | sqlite3 $DB #loads views SQL
 
-echo; date; echo 'Importing Debian metadata'
+echo; date; echo 'Importing Debian packages metadata'
 sh ${DIRECTORY[script]}/db/debian/import_packages | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
 
 echo; date; echo 'Importing Popcon data'
 sh ${DIRECTORY[script]}/db/debian/import_popcon | tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
 
+echo; date; echo 'Importing Dboss projects list'
+sh ${DIRECTORY[script]}/db/dboss/import_projects | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+
 echo; date; echo 'Importing Dboss categories'
 sh ${DIRECTORY[script]}/db/dboss/import_categories | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+
+echo; date; echo 'Importing Dboss descriptions'
+sh ${DIRECTORY[script]}/db/dboss/import_descriptions | tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
 
 echo; date
 ls -lh ${DIRECTORY[work]}/

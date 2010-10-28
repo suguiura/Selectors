@@ -2,7 +2,7 @@
 -- Author:        Rafael S. Suguiura
 -- Caption:       LDTM DB Model
 -- Project:       Linux Distributions Treasure Map
--- Changed:       2010-10-26 21:34
+-- Changed:       2010-10-28 10:23
 -- Created:       2010-07-28 13:51
 PRAGMA foreign_keys = OFF;
 
@@ -40,6 +40,7 @@ CREATE TABLE "Maintainers"(
 CREATE TABLE "Projects"(
   "id" INTEGER PRIMARY KEY NOT NULL,
   "name" VARCHAR(255) NOT NULL,
+  "description" TEXT,
   CONSTRAINT "uq_projects"
     UNIQUE("name")
 );

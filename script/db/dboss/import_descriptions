@@ -1,0 +1,23 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/dboss/import_descriptions'; exit)
+. $PWD/config # import config
+
+
+for FILE in ${DIRECTORY[data]}/pages/sf/*; do
+  [ -s "$FILE" ] || continue
+  ID=$(basename "$FILE" '.html')
+  DESCRIPTION=$(cat $FILE | \
+    sed ':a;N;$!ba;s/\n/\\n/g' | \
+    sed 's/.*<p id="pd-txt" class="editable">//' | \
+    sed 's/<\/p>.*//' | \
+    sed 's/^\(\s\|\\n\)*//' | \
+    sed 's/\(\s\|\\n\)*$//' | \
+    recode html/.. | \
+    sed "s/'/''/g")
+  [ -n "$DESCRIPTION" ] || continue
+  
+  echo "update or ignore Projects set description = '$DESCRIPTION' where name = '$ID';"
+done
+

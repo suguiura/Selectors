@@ -1,8 +1,9 @@
 #!/bin/bash
 
 [ -s "$PWD/config" ] || \
-(echo 'From the script directory, run: db/dboss/projects_sql'; exit)
+(echo 'From the script directory, run: db/dboss/import_categories'; exit)
 . $PWD/config # import config
+
 
 cat ${DIRECTORY[data]}/dboss/sourceforge/proj_topics.csv | \
 tr "[:upper:]" "[:lower:]" | \
@@ -11,17 +12,6 @@ sed 's/^"\|"$//g' | \
 sed 's/",\|,"/ /g' | \
 while read NAME CODE CATEGORY; do
   echo "insert or ignore into Categories (name) values ('$CATEGORY');"
-  echo "insert or ignore into Projects (name) values ('$NAME');"
   echo "insert or ignore into Projects_have_Categories select p.id, c.id from Projects as p, Categories as c where p.name = '$NAME' and c.name = '$CATEGORY';"
 done
-
-#cat $DATADIR/dboss/sourceforge/categories.csv | \
-#tr "[:upper:]" "[:lower:]" | \
-#sed 's/^#.*$//g' | \
-#sed 's/^"\|"$//g' | \
-#sed 's/","/ /g' | \
-#while read PARENT SHORT CATEGORY; do
-#  echo "insert or ignore into EquivalenceClasses (name) values ('$PARENT');"
-#  echo "update or ignore Categories set equivalenceclass_id = (select id from EquivalenceClasses where name = #'$PARENT') where name = '$CATEGORY';"
-#done
 

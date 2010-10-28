@@ -1,0 +1,12 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/dboss/import_projects'; exit)
+. $PWD/config # import config
+
+
+cat ${DIRECTORY[data]}/dboss/sourceforge/proj_unixname.txt | \
+while read NAME; do
+  echo "insert or ignore into Projects (name) values ('$NAME');"
+done
+
