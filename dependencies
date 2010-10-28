@@ -1,0 +1,8 @@
+
+>=bash-4
+sqlite3
+wget
+recode
+rsync
+gzip
+
