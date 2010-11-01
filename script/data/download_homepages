@@ -14,19 +14,28 @@ TMPFILES=" $SUCCESS"
 
 function download
 {
-  REPOSITORY="$1"; URL="$(echo $2 | sed 's/<\(.*\)>/\1/g')"
-  FILE=${DIRECTORY[data]}/pages/$REPOSITORY/$ID.html
-  ([ -s "$FILE" ] || [ -z "$URL" ]) && return
-  (wget -t 3 -qO - "$URL" > $FILE)
-  [ -s "$FILE" ] && (echo "$ID $URL $FILE" >> $SUCCESS)
+  REPOSITORY="$1"
+  URL="$(echo $2 | sed 's/<\(.*\)>/\1/g' | sed 's/.*http:\/\/>//g')"
+  EXTENSION="$3"
+  FILE=${DIRECTORY[data]}/pages/$REPOSITORY/$ID.$EXTENSION
+  [ -s "$FILE" ] && return
+  [ -z "$URL"  ] && return
+  trap "rm -fr $FILE.tmp" EXIT
+  wget -T 30 -t 3 -qO - -B "$URL" "$URL" > $FILE.tmp
+  touch $FILE
+  [ $(stat -c '%s' $FILE.tmp) -gt $(stat -c '%s' $FILE) ] \
+  && (mv $FILE.tmp $FILE; echo "$ID $URL $FILE" >> $SUCCESS)
+  rm -fr $FILE.tmp
 }
 
 function download_all
 {
   ID=$1
   SQL="select homepage from Selectors where name = '$ID'"
-  download 'debian' $(sqlite3 $DB "$SQL;")
-  download 'sf' "http://sourceforge.net/projects/$ID"
+  URL=$(sqlite3 $DB "$SQL;")
+  download 'ustream' "$URL" 'html'
+  download 'debian/lenny' "packages.debian.org/lenny/$ID" 'html'
+  download 'sforge' "sourceforge.net/projects/$ID" 'html'
 }
 
 FINISH="kill -TERM -$$; rm -fr $TMPFILES; echo -e '\nMay the Force be with you!'"
@@ -43,4 +52,6 @@ cat $SUCCESS
 echo "Total found: $(cat $SUCCESS | wc -l)"
 
 eval "$FINISH"
+
+echo -e "\007"
 

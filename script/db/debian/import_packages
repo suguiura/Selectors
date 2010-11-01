@@ -4,6 +4,7 @@
 (echo 'From the script directory, run: db/debian/all_sql'; exit)
 . $PWD/config # import config
 
+
 DISTRIBUTION='debian'
 
 function insert_distribution
@@ -106,7 +107,8 @@ function parse_release
   REPOSITORIES=main
   ARCHITECTURES=i386
   for REPOSITORY in $REPOSITORIES; do
-#    parse "source/Sources.gz" &
+#    FILE="$DIR/$REPOSITORY/source/Sources.gz"
+#    parse
     for ARCHITECTURE in ${ARCHITECTURES#all}; do
       FILE="$DIR/$REPOSITORY/binary-$ARCHITECTURE/Packages.gz"
       parse

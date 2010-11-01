@@ -12,6 +12,7 @@ sed 's/^"\|"$//g' | \
 sed 's/",\|,"/ /g' | \
 while read NAME CODE CATEGORY; do
   echo "insert or ignore into Categories (name) values ('$CATEGORY');"
+  echo "insert or ignore into Projects (name) values ('$NAME');"
   echo "insert or ignore into Projects_have_Categories select p.id, c.id from Projects as p, Categories as c where p.name = '$NAME' and c.name = '$CATEGORY';"
 done
 
