@@ -1,0 +1,8 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: data/debian/download_metadata'; exit)
+. $PWD/config # import config
+
+wget -P ${DIRECTORY[data]}/debian http://debtags.alioth.debian.org/tags/tags-current.gz
+
