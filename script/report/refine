@@ -8,41 +8,54 @@
 . ${DIRECTORY[script]}/utils/jobqueue # import jobqueue
 
 JOBS=8
-LIST="${DIRECTORY[data]}/lists/references.list"
+ORIGINLIST="${DIRECTORY[data]}/lists/nosubsourceforge.list"
+DESTLIST="${DIRECTORY[data]}/lists/references.list"
 
 function check_html
 {
   REPOSITORY=$1
   FILE="${DIRECTORY[data]}/pages/$REPOSITORY/$ID.html"
-  if [ -s "$FILE" ] && (cat $FILE | grep -iq "$QUERY"); then
+  if [ -s "$FILE" ] && (cat $FILE | grep -q "$QUERY"); then
     echo "$ID"
   fi
+}
+
+function check_upstream_page_for_sf_reference
+{
+  QUERY="\W\(\($ID.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$ID\)\)\W"
+  check_html 'ustream'
+}
+
+function check_sf_page_for_upstream_host_reference
+{
+  SQL="select homepage from Selectors where name = '$ID';"
+  URL=$(sqlite3 $DB "$SQL" | head -1)
+  
+  QUERY=$(ruby -ruri -e "puts URI.parse('$URL').host" 2> ruby.error)
+  check_html 'sforge'
 }
 
 function check
 {
   ID="$1"
-  SQL="select homepage from Selectors where name = '$ID';"
-  URL=$(sqlite3 $DB "$SQL" | head -1)
-  
-  QUERY="\($ID.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$ID\W\)"
-  check_html 'debian' >> $LIST
-  QUERY=$(ruby -ruri -e "puts URI.parse('$URL').host" 2> ruby.error)
-  check_html 'sf' >> $LIST
+  check_upstream_page_for_sf_reference >> $DESTLIST
+  check_sf_page_for_upstream_host_reference >> $DESTLIST
 }
 
 FINISH="kill -TERM -$$; rm -fr $TMPFILES; echo -e '\nMay the Force be with you!'"
 trap "$FINISH" EXIT
 
-date
-SQL="select distinct name from Projects join Selectors using (name) where not (homepage like '%sourceforge.net%' or homepage like '%sf.net%' or homepage is null or homepage = '');"
-sqlite3 -separator ' ' $DB "$SQL" | run_queue $JOBS "check"; echo
+rm -fr $DESTLIST
 
-echo
 date
-echo "sorting..."
-sort $LIST | uniq > $LIST.sort; mv $LIST.sort $LIST
+cat $ORIGINLIST | run_queue $JOBS "check"
+#echo "acpitool" | run_queue $JOBS "check"
+
+echo; date; echo "sorting..."
+sort $DESTLIST | uniq > $DESTLIST.sort; mv $DESTLIST.sort $DESTLIST
   
 echo
-echo "Total found: $(cat $LIST | wc -l)"
+echo "Total found: $(cat $DESTLIST | wc -l)"
+
+rm -fr $TMPFILES
 
