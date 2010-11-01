@@ -9,7 +9,6 @@ declare -A SELECT=(
   [projects]="select distinct name from Projects"
   [selectors]="select distinct name from Selectors"
   [join]="select distinct name from Selectors join Projects using (name)"
-  [joinhp]="select distinct name, homepage from Selectors join Projects using (name)"
 )
 
 declare -A CONDITION=(
@@ -18,7 +17,7 @@ declare -A CONDITION=(
   [has_description_with_sf]="(description like '%sourceforge.net/projects/'||name||'%' or description like '%'||name||'.sourceforge.net%' or description like '%'||name||'.sf.net%' or description like '%sf.net/projects/'||name||'%')"
 )
 
-SQL="${SELECT[joinhp]} where ${CONDITION[has_homepage]} and not ${CONDITION[has_homepage_with_sf]}"
+SQL="${SELECT[join]} where ${CONDITION[has_homepage]} and not ${CONDITION[has_homepage_with_sf]}"
 sqlite3 $DB "select name from ($SQL);" | sort | \
 diff --changed-group-format='%=' --unchanged-group-format='' \
 - ${DIRECTORY[data]}/lists/references.list > ${DIRECTORY[data]}/lists/noreferences.list
@@ -27,7 +26,7 @@ diff --changed-group-format='%=' --unchanged-group-format='' \
 function report
 {
   FILE="${DIRECTORY[data]}/lists/$1.list"
-  [ -z "$SQL" ] || sqlite3 $DB "$SQL;" > $FILE
+  [ -z "$SQL" ] || (sqlite3 $DB "$SQL;" | sort | uniq > $FILE)
   echo "$DESCRIPTION" $(cat $FILE | wc -l) "($1)"
 }
 
@@ -47,19 +46,19 @@ SQL="${SELECT[join]}"
 DESCRIPTION='Identifiers (project/selector) intersection:'
 report 'intersection'
 
-SQL="${SELECT[joinhp]} where not ${CONDITION[has_homepage]}"
+SQL="${SELECT[join]} where not ${CONDITION[has_homepage]}"
 DESCRIPTION='... seletor without homepage:'
 report 'nohomepage'
 
-SQL="${SELECT[joinhp]} where ${CONDITION[has_homepage]}"
+SQL="${SELECT[join]} where ${CONDITION[has_homepage]}"
 DESCRIPTION='... seletor with homepage:'
 report 'homepage'
 
-SQL="${SELECT[joinhp]} where ${CONDITION[has_homepage_with_sf]}"
+SQL="${SELECT[join]} where ${CONDITION[has_homepage_with_sf]}"
 DESCRIPTION='... ... seletor URL with SF substring:'
 report 'subsourceforge'
 
-SQL="${SELECT[joinhp]} where ${CONDITION[has_homepage]} and not ${CONDITION[has_homepage_with_sf]}"
+SQL="${SELECT[join]} where ${CONDITION[has_homepage]} and not ${CONDITION[has_homepage_with_sf]}"
 DESCRIPTION='... ... seletor URL without SF substring:'
 report 'nosubsourceforge'
 
@@ -71,7 +70,7 @@ SQL=''
 DESCRIPTION='... ... ... homepage without references to counterpart:'
 report 'noreferences'
 
-SQL="${SELECT[joinhp]} where ${CONDITION[has_description_with_sf]}"
+SQL="${SELECT[join]} where ${CONDITION[has_description_with_sf]}"
 DESCRIPTION='... description with SF substring:'
 report 'description_with_sf'
 
