@@ -8,9 +8,10 @@ echo -n > $PROGRESS
 function progress
 {
   TOTAL="$1"
+  PREFIX="${2:-Progress:}"
   LENGTH=$(echo "$TOTAL" | wc -c)
   echo >> $PROGRESS
   CURRENT="$(cat $PROGRESS | wc -l)"
-  printf "\rProgress: %${LENGTH}d/$TOTAL" "$CURRENT"
+  printf "\r$PREFIX %${LENGTH}d/$TOTAL" "$CURRENT" >&2
 }
 
