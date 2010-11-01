@@ -5,4 +5,5 @@ wget
 recode
 rsync
 gzip
+libxslt
 
