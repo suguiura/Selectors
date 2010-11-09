@@ -1,0 +1,27 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: report/diverge'; exit)
+. $PWD/config # import config
+
+[ -n "$1" ] || return
+if [ -n "$2" ]; then
+  QUERY="^$2"
+else
+  QUERY=".*"
+fi
+
+ID="$1"
+FILE="${DIRECTORY[data]}/debian/tags-current"
+
+[ -s "$FILE" ] || return
+cat $FILE \
+| grep "^$ID:" \
+| cut -d\  -f 2- \
+| sed 's/, /\n/g' \
+| grep "$QUERY" \
+| sed 's/::/ /g' \
+| tr "[:upper:]" "[:lower:]" \
+| sort \
+| uniq
+

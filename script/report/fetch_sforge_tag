@@ -1,0 +1,23 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: report/diverge'; exit)
+. $PWD/config # import config
+
+[ -n "$1" ] || return
+if [ -n "$2" ]; then
+  QUERY="'$2'"
+else
+  QUERY="\$key"
+fi
+
+ID="$1"
+FILE="${DIRECTORY[data]}/pages/sforge/$ID.html"
+FILTER="${DIRECTORY[script]}/filter/sf/details.xsl"
+
+[ -s "$FILE" ] || return
+xsltproc --html --stringparam 'TEST' "\$key = $QUERY" "$FILTER" "$FILE" \
+| tr "[:upper:]" "[:lower:]" \
+| sort \
+| uniq
+

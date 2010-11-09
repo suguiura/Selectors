@@ -8,39 +8,35 @@
 . ${DIRECTORY[script]}/utils/jobqueue # import jobqueue
 
 JOBS=8
-ORIGINLIST="${DIRECTORY[data]}/lists/match.list"
+ORIGINLIST="${DIRECTORY[data]}/lists/intersection.list"
 DESTLIST="${DIRECTORY[data]}/lists/diverge.list"
-FILTER="${DIRECTORY[script]}/filter/sf/details.xsl"
 
 function check_programming_language
 {
   FILE="${DIRECTORY[data]}/debian/tags-current"
   [ -s "$FILE" ] || return
-  PROGRAMMING_LANGUAGE=$(
-    cat $FILE \
-    | grep "^$ID:" \
-    | cut -d\  -f 2- \
-    | sed 's/, /\n/g' \
-    | grep '^implemented-in' \
-    | sed 's/.*:://g' \
+  LIST0=$(
+    sh ${DIRECTORY[script]}/report/fetch_debian_tag $FILE 'implemented-in' \
+    | cut -d\  -f2- \
     | tr "[:upper:]" "[:lower:]" \
-    | sed 's/todo/\n/g'
+    | sort \
+    | uniq
   )
-  [ -n "$PROGRAMMING_LANGUAGE" ] || return
-  
+  [ -n "$LIST0" ] || return
+
   FILE="${DIRECTORY[data]}/pages/sforge/$ID.html"
   [ -s "$FILE" ] || return
-  LIST=$(
-    xsltproc --html --stringparam 'NAME' 'Programming Language:' $FILTER $FILE \
-    | tail -n +2 \
-    | head -n -1 \
+  LIST1=$(
+    sh ${DIRECTORY[script]}/report/fetch_sforge_tag $FILE 'Programming Language' \
+    | cut -d\  -f2- \
     | tr "[:upper:]" "[:lower:]" \
-    | sort
+    | sort \
+    | uniq
   )
-  [ -n "$LIST" ] || return
-  
+  [ -n "$LIST1" ] || return
+
   RESULT=$(diff -Bw --changed-group-format='' --unchanged-group-format='%=' \
-  <(echo "$PROGRAMMING_LANGUAGE") <(echo "$LIST") | wc -l)
+    <(echo "LIST0") <(echo "LIST1") | wc -l)
   [ "$RESULT" -eq 0 ] || return
   
   echo $ID
@@ -49,7 +45,7 @@ function check_programming_language
 function check
 {
   ID="$1"
-  check_programming_language >> $DESTLIST
+  check_programming_language
 }
 
 FINISH="kill -TERM -$$; rm -fr $TMPFILES; echo -e '\nMay the Force be with you!'"
@@ -59,7 +55,7 @@ rm -fr $DESTLIST
 
 date
 cat $ORIGINLIST | run_queue $JOBS "check"
-#echo 'gnome-rdp' | run_queue $JOBS "check"
+#echo 'a7xpg' | run_queue $JOBS "check"
 
 touch $DESTLIST
 echo; date; echo "sorting..."
