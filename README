@@ -1,0 +1,11 @@
+Linux Distributions Metadata
+
+The Linux Distributions Metadata project is a set of tool to map descriptive
+metadata about linux distributions in an unified database. The scripts will
+download the data and make transformations, selecting common fields and
+organizing in an standard format. In the current stage of the project, our main
+goal is to map the metadata of software packages from those distributions.
+
+All the information is from public domain, hosted at Linux Distributions
+servers, and acessible from any computer.
+
