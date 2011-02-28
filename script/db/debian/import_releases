@@ -107,12 +107,12 @@ function parse_release
   REPOSITORIES=main
   ARCHITECTURES=i386
   for REPOSITORY in $REPOSITORIES; do
-#    FILE="$DIR/$REPOSITORY/source/Sources.gz"
-#    parse
-    for ARCHITECTURE in ${ARCHITECTURES#all}; do
-      FILE="$DIR/$REPOSITORY/binary-$ARCHITECTURE/Packages.gz"
-      parse
-    done
+    FILE="$DIR/$REPOSITORY/source/Sources.gz"
+    parse
+#    for ARCHITECTURE in ${ARCHITECTURES#all}; do
+#      FILE="$DIR/$REPOSITORY/binary-$ARCHITECTURE/Packages.gz"
+#      parse
+#    done
   done
 }
 
