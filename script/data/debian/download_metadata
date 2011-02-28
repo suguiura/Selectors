@@ -4,9 +4,10 @@
 (echo 'From the script directory, run: data/debian/download_metadata'; exit)
 . $PWD/config # import config
 
+HOST="ftp.br.debian.org"
 DIR="${DIRECTORY[data]}/debian"
 
-rsync -avmz --include "Packages.gz" --include "Sources.gz" --include "Release" --include "*/" --exclude "*" ftp.br.debian.org::debian/dists $DIR
-rsync -avmz --include "*.list.gz" --include "*/" --exclude "*" ftp.br.debian.org::debian-cd/5.0.6 $DIR
-rsync -avmz --include "*.packages" --include "*/" --exclude "*" ftp.br.debian.org::debian-cd/5.0.6-live $DIR
+rsync -avm --include "Packages.gz" --include "Sources.gz" --include "Release" --include "*/" --exclude "*" $HOST::debian/dists $DIR
+rsync -avm --include "*.list.gz" --include "*/" --exclude "*" $HOST::debian-cd $DIR
+rsync -avm --include "*.packages" --include "*/" --exclude "*" $HOST::debian-cd $DIR
 
