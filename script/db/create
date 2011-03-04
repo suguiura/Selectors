@@ -1,0 +1,17 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/create'; exit)
+. $PWD/config # import config
+
+SCHEMASQL="${DIRECTORY[db]}/schema.sql"
+VIEWSSQL="${DIRECTORY[db]}/views.sql"
+
+[ -s $SCHEMASQL ] || (echo "$SCHEMASQL doesn't exist. Aborted."; exit 1) #checks schema SQL
+[ -s $VIEWSSQL ] || (echo "$VIEWSSQL doesn't exist. Aborted."; exit 1) #checks views SQL
+
+cat $SCHEMASQL | sqlite3 $DB #loads schema SQL
+cat $VIEWSSQL | sqlite3 $DB #loads views SQL
+
+echo 'Database created.'
+

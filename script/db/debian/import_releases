@@ -1,84 +1,116 @@
 #!/bin/bash
 
 [ -s "$PWD/config" ] || \
-(echo 'From the script directory, run: db/debian/all_sql'; exit)
+(echo 'From the script directory, run: db/debian/import_releases'; exit)
 . $PWD/config # import config
 
 
-DISTRIBUTION='debian'
+BASE=""
+CONTENT_FILE="Packages.gz"
+RELEASE_FILE="Release"
+
+while getopts "b:c:r:" OPT; do
+  case $OPT in
+    b) BASE="$OPTARG";;
+    c) CONTENT_FILE="$OPTARG";;
+    r) RELEASE_FILE="$OPTARG";;
+    ?)
+      echo "usage: $0 [-b <BASE_DIR>] [-c <CONTENT_FILE>] [-r <RELEASE_FILE>]"
+      echo "BASE: base directory where the files below are located"
+      echo "CONTENT_FILE: the .gz file with the Debian metadata: Packages.gz (default) or Sources.gz"
+      echo "RELEASE_FILE: the text file containing the release metadata: Release (default)"
+      exit 1
+    ;;
+  esac
+done
+
+CONTENT_FILE="$BASE/$CONTENT_FILE"
+RELEASE_FILE="$BASE/$RELEASE_FILE"
+
+SQLFILE="${DIRECTORY[work]}/debian_releases.sql"
+
+function sql
+{
+  echo "$1" | tee -a $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+}
 
 function insert_distribution
 {
-  echo "insert or ignore into Distributions (name) values ('$DISTRIBUTION');"
+  sql "insert or ignore into Distributions (name) values ('$DISTRIBUTION');"
 }
 
-function insert_architectures
+function insert_architecture
 {
-  for ARCHITECTURE in $ARCHITECTURES; do
-    echo "insert or ignore into Architectures (name) values ('$ARCHITECTURE');"
+  for ARCHITECTURE in ${SELECTOR[architectures]}; do
+    sql "insert or ignore into Architectures (name) values ('$ARCHITECTURE');"
   done
 }
 
-function insert_releases
+function insert_release
 {
-  for ARCHITECTURE in $ARCHITECTURES; do
-    echo "insert or ignore into Releases select null, Distributions.id, Architectures.id, ${RELEASE[version]}, ${RELEASE[date]}, ${RELEASE[codename]}, ${RELEASE[status]}, ${RELEASE[description]} from Distributions, Architectures where Distributions.name = '$DISTRIBUTION' and Architectures.name = '$ARCHITECTURE';"
+  for ARCHITECTURE in ${SELECTOR[architectures]}; do
+    sql "insert or ignore into Releases select null, Distributions.id, Architectures.id, ${RELEASE[version]}, ${RELEASE[date]}, ${RELEASE[codename]}, ${RELEASE[status]}, ${RELEASE[description]} from Distributions, Architectures where Distributions.name = '$DISTRIBUTION' and Architectures.name = '$ARCHITECTURE';"
   done
 }
 
 function insert_selector_maintainer
 {
-  echo "insert or ignore into Maintainers values (null, ${PACKAGE[mname]}, ${PACKAGE[mmail]});"
+  sql "insert or ignore into Maintainers values (null, ${SELECTOR[mname]}, ${SELECTOR[mmail]});"
 }
 
 function insert_selector_section
 {
-  echo "insert or ignore into Categories (name) values (${PACKAGE[section]});"
+  sql "insert or ignore into Categories (name) values (${SELECTOR[section]});"
 }
 
 function insert_selector
 {
-  echo "insert or ignore into Selectors select null, Categories.id, Maintainers.id, ${PACKAGE[name]}, ${PACKAGE[version]}, ${PACKAGE[origin]}, ${PACKAGE[homepage]}, ${PACKAGE[description]} from Categories, Maintainers where Maintainers.name = ${PACKAGE[mname]} and Maintainers.email = ${PACKAGE[mmail]} and Categories.name = ${PACKAGE[section]};"
+  sql "insert or ignore into Selectors select null, Categories.id, Maintainers.id, ${SELECTOR[name]}, ${SELECTOR[version]}, ${SELECTOR[origin]}, ${SELECTOR[homepage]}, ${SELECTOR[description]} from Categories, Maintainers where Maintainers.name = ${SELECTOR[mname]} and Maintainers.email = ${SELECTOR[mmail]} and Categories.name = ${SELECTOR[section]};"
 }
 
 function insert_selector_into_release
 {
-  echo "insert or ignore into Releases_have_Selectors select r.id, s.id from ReleasesView as r, SelectorsCategoryView as s where r.version = ${RELEASE[version]} and r.architecture = '$ARCHITECTURE' and r.distribution = '$DISTRIBUTION' and s.name = ${PACKAGE[name]} and s.version = ${PACKAGE[version]} and s.category = ${PACKAGE[section]};"
+  for ARCHITECTURE in ${SELECTOR[architectures]}; do
+    sql "insert or ignore into Releases_have_Selectors select r.id, s.id from ReleasesView as r, SelectorsCategoryView as s where r.version = ${RELEASE[version]} and r.distribution = '$DISTRIBUTION' and r.architecture = '$ARCHITECTURE' and s.name = ${SELECTOR[name]} and s.version = ${SELECTOR[version]} and s.category = ${SELECTOR[section]};"
+  done
 }
 
-function parse
+function parse_selectors
 {
-  declare -a ATTRIBUTES=('name' 'section' 'version' 'origin' 'homepage' 'description' 'mname' 'mmail')
-  declare -A PACKAGE
+  declare -a ATTRIBUTES=('name' 'section' 'version' 'origin' 'homepage' 'description' 'mname' 'mmail' 'architecture')
+  declare -A SELECTOR
   
-  zcat "$FILE" | \
-  sed "s/'/''/g" | \
-  sed ':a;N;$!ba;s/\n /\\\\n /g' | \
-  sed 's/^Maintainer: \(.*\) <\(.*\)>$/MaintainerName: \1\nMaintainerEmail: \2/g' | \
-  sed 's/^\(Section: \).*\/\(.*\)$/\1\2/g' | \
-  sed 's/\(^Description:.*\)\(Homepage:[^\\]*\)\(.*\)/\1\3\n\2/g' | \
-  while read KEY VALUE; do
+  zcat "$CONTENT_FILE" \
+  | sed "s/'/''/g" \
+  | sed ':a;N;$!ba;s/\n /\\\\n /g' \
+  | sed 's/^Maintainer: \(.*\) <\(.*\)>$/MaintainerName: \1\nMaintainerEmail: \2/g' \
+  | sed 's/^\(Section: \).*\/\(.*\)$/\1\2/g' \
+  | sed 's/\(^Description:.*\)\(Homepage:[^\\]*\)\(.*\)/\1\3\n\2/g' \
+  | while read KEY VALUE; do
     case "$KEY" in
-      Package:) PACKAGE[name]="'$VALUE'";;
-      Version:) PACKAGE[version]="'$VALUE'";;
-      Section:) PACKAGE[section]="'$VALUE'";;
-      MaintainerName:) PACKAGE[mname]="'$VALUE'";;
-      MaintainerEmail:) PACKAGE[mmail]="'$VALUE'";;
-      Homepage:) PACKAGE[homepage]="'$VALUE'";;
-      Description:) PACKAGE[description]="'$VALUE'";;
-      Source:) PACKAGE[origin]="'$VALUE'";;
+      Package:) SELECTOR[name]="'$VALUE'";;
+      Version:) SELECTOR[version]="'$VALUE'";;
+      Section:) SELECTOR[section]="'$VALUE'";;
+      MaintainerName:) SELECTOR[mname]="'$VALUE'";;
+      MaintainerEmail:) SELECTOR[mmail]="'$VALUE'";;
+      Homepage:) SELECTOR[homepage]="'$VALUE'";;
+      Description:) SELECTOR[description]="'$VALUE'";;
+      Architecture:) SELECTOR[architectures]="$VALUE";;
+      Source:) SELECTOR[origin]="'$VALUE'";;
       '')
         for ATTRIBUTE in ${ATTRIBUTES[@]}; do
-          PACKAGE[$ATTRIBUTE]=${PACKAGE[$ATTRIBUTE]:-null}
+          SELECTOR[$ATTRIBUTE]=${SELECTOR[$ATTRIBUTE]:-null}
         done
         
+        insert_architecture
+        insert_release
         insert_selector_maintainer
         insert_selector_section
         insert_selector
         insert_selector_into_release
         
-        unset PACKAGE
-        declare -A PACKAGE
+        unset SELECTOR
+        declare -A SELECTOR
         ;;
     esac
   done
@@ -86,7 +118,6 @@ function parse
 
 function parse_release
 {
-  HASH=0
   declare -A RELEASE
   while read KEY VALUE; do
     case "$KEY" in
@@ -94,29 +125,16 @@ function parse_release
       Suite:) RELEASE[status]="'$VALUE'";;
       Codename:) RELEASE[codename]="'$VALUE'";;
       Date:) RELEASE[date]="'$VALUE'";;
-      Architectures:) ARCHITECTURES="all $VALUE";;
-      Components:) REPOSITORIES="$VALUE";;
       Description:) RELEASE[description]="'$VALUE'";;
     esac
   done
 
-  insert_distribution
-  insert_architectures
-  insert_releases
-
-  REPOSITORIES=main
-  ARCHITECTURES=i386
-  for REPOSITORY in $REPOSITORIES; do
-    FILE="$DIR/$REPOSITORY/source/Sources.gz"
-    parse
-#    for ARCHITECTURE in ${ARCHITECTURES#all}; do
-#      FILE="$DIR/$REPOSITORY/binary-$ARCHITECTURE/Packages.gz"
-#      parse
-#    done
-  done
+  parse_selectors
 }
 
-for DIR in ${DIRECTORY[data]}/debian/dists/lenny; do
-  cat $DIR/Release | parse_release
-done
+DISTRIBUTION='debian'
+
+insert_distribution
+
+cat $RELEASE_FILE | parse_release
 

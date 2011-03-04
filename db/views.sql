@@ -18,7 +18,9 @@ SELECT
   Selectors.name as name,
   Selectors.version as version,
   Categories.name as category
-FROM Selectors, Categories
+FROM
+  Selectors,
+  Categories
 WHERE
   Selectors.category_id = Categories.id;
 
@@ -45,3 +47,19 @@ JOIN
   SelectorStatistics
 USING
   (selector_id);
+
+CREATE VIEW "ReleaseSelectorsView" AS
+SELECT
+  Selectors.*,
+  ReleasesView.version as release_version,
+  ReleasesView.architecture as architecture,
+  ReleasesView.distribution as distribution
+FROM
+  Selectors
+JOIN
+  ReleasesView,
+  Releases_have_Selectors
+WHERE
+  Releases_have_Selectors.selector_id = Selectors.id and
+  Releases_have_Selectors.release_id = ReleasesView.id;
+

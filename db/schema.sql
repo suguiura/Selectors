@@ -1,8 +1,8 @@
--- Creator:       MySQL Workbench 5.2.28/ExportSQLite plugin 2009.12.02
+-- Creator:       MySQL Workbench 5.2.31/ExportSQLite plugin 2009.12.02
 -- Author:        Rafael S. Suguiura
 -- Caption:       LDTM DB Model
 -- Project:       Linux Distributions Treasure Map
--- Changed:       2010-10-28 10:23
+-- Changed:       2011-02-28 21:00
 -- Created:       2010-07-28 13:51
 PRAGMA foreign_keys = OFF;
 
@@ -76,6 +76,25 @@ CREATE TABLE "EquivalenceClasses"(
   CONSTRAINT "uq_equivalenceclasses"
     UNIQUE("name")
 );
+CREATE TABLE "Tags"(
+  "id" INTEGER PRIMARY KEY NOT NULL,
+  "name" VARCHAR(255) NOT NULL,
+  "value" VARCHAR(255) NOT NULL,
+  CONSTRAINT "uq_tags"
+    UNIQUE("name")
+);
+CREATE TABLE "Projects_have_Tags"(
+  "project_id" INTEGER NOT NULL,
+  "tag_id" INTEGER NOT NULL,
+  PRIMARY KEY("project_id","tag_id"),
+  CONSTRAINT "fk_projects"
+    FOREIGN KEY("project_id")
+    REFERENCES "Projects"("id"),
+  CONSTRAINT "fk_tags"
+    FOREIGN KEY("tag_id")
+    REFERENCES "Tags"("id")
+);
+CREATE INDEX "Projects_have_Tags.fk_tags" ON "Projects_have_Tags"("tag_id");
 CREATE TABLE "Files"(
 --   Files table, which represents a file, either a project package, a media, a patch, etc.
   "id" INTEGER PRIMARY KEY NOT NULL,
@@ -171,6 +190,18 @@ CREATE TABLE "Projects_have_Categories"(
     REFERENCES "Categories"("id")
 );
 CREATE INDEX "Projects_have_Categories.fk_categories" ON "Projects_have_Categories"("category_id");
+CREATE TABLE "Selectors_have_Tags"(
+  "selector_id" INTEGER NOT NULL,
+  "tag_id" INTEGER NOT NULL,
+  PRIMARY KEY("selector_id","tag_id"),
+  CONSTRAINT "fk_selectors"
+    FOREIGN KEY("selector_id")
+    REFERENCES "Selectors"("id"),
+  CONSTRAINT "fk_tags"
+    FOREIGN KEY("tag_id")
+    REFERENCES "Tags"("id")
+);
+CREATE INDEX "Selectors_have_Tags.fk_tags" ON "Selectors_have_Tags"("tag_id");
 CREATE TABLE "Medias"(
   "id" INTEGER PRIMARY KEY NOT NULL,
   "release_id" INTEGER NOT NULL,
