@@ -5,6 +5,13 @@
 . $PWD/config # import config
 
 
+SQLFILE="${DIRECTORY[work]}/import_releases.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
+
 BASE=""
 CONTENT_FILE="Packages.gz"
 RELEASE_FILE="Release"
@@ -26,13 +33,6 @@ done
 
 CONTENT_FILE="$BASE/$CONTENT_FILE"
 RELEASE_FILE="$BASE/$RELEASE_FILE"
-
-SQLFILE="${DIRECTORY[work]}/debian_releases.sql"
-
-function sql
-{
-  echo "$1" | tee -a $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
-}
 
 function insert_distribution
 {
@@ -137,4 +137,6 @@ DISTRIBUTION='debian'
 insert_distribution
 
 cat $RELEASE_FILE | parse_release
+
+cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 

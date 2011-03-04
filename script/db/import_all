@@ -4,28 +4,26 @@
 (echo 'From the script directory, run: db/import_all'; exit)
 . $PWD/config # import config
 
-DEBIANSQL="${DIRECTORY[work]}/debian.sql"
-DBOSSSQL="${DIRECTORY[work]}/dboss.sql"
 
 echo; date; echo 'Importing Debian releases metadata'
 sh ${DIRECTORY[script]}/db/debian/import_releases \
 -b ${DIRECTORY[data]}/debian/working-release/5.0.8-main-i386
 
-echo; date; echo 'Importing Popcon data'
-sh ${DIRECTORY[script]}/db/debian/import_popcon \
-| tee -a $DEBIANSQL | sqlite3 $DB 2> $DEBIANSQL.log
+#echo; date; echo 'Importing Debian releases metadata'
+#sh ${DIRECTORY[script]}/db/debian/import_releases \
+#-b ${DIRECTORY[data]}/debian/working-release/5.0.6-main-i386
+
+#echo; date; echo 'Importing Popcon data'
+#sh ${DIRECTORY[script]}/db/debian/import_popcon
 
 echo; date; echo 'Importing Dboss projects list'
-sh ${DIRECTORY[script]}/db/dboss/import_projects \
-| tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+sh ${DIRECTORY[script]}/db/dboss/import_projects
 
 #echo; date; echo 'Importing Dboss categories'
-#sh ${DIRECTORY[script]}/db/dboss/import_categories \
-#| tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+#sh ${DIRECTORY[script]}/db/dboss/import_categories
 
-echo; date; echo 'Importing Dboss descriptions'
-sh ${DIRECTORY[script]}/db/dboss/import_descriptions \
-| tee -a $DBOSSSQL | sqlite3 $DB 2> $DBOSSSQL.log
+#echo; date; echo 'Importing Dboss descriptions'
+#sh ${DIRECTORY[script]}/db/dboss/import_descriptions
 
 echo; date
 ls -lh ${DIRECTORY[work]}/

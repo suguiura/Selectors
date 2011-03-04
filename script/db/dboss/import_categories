@@ -5,14 +5,23 @@
 . $PWD/config # import config
 
 
+SQLFILE="${DIRECTORY[work]}/import_descriptions.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
+
 cat ${DIRECTORY[data]}/dboss/sourceforge/proj_topics.csv | \
 tr "[:upper:]" "[:lower:]" | \
 sed 's/^#.*$//g' | \
 sed 's/^"\|"$//g' | \
 sed 's/",\|,"/ /g' | \
 while read NAME CODE CATEGORY; do
-  echo "insert or ignore into Categories (name) values ('$CATEGORY');"
-  echo "insert or ignore into Projects (name) values ('$NAME');"
-  echo "insert or ignore into Projects_have_Categories select p.id, c.id from Projects as p, Categories as c where p.name = '$NAME' and c.name = '$CATEGORY';"
+  sql "insert or ignore into Categories (name) values ('$CATEGORY');"
+  sql "insert or ignore into Projects (name) values ('$NAME');"
+  sql "insert or ignore into Projects_have_Categories select p.id, c.id from Projects as p, Categories as c where p.name = '$NAME' and c.name = '$CATEGORY';"
 done
+
+cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 

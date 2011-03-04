@@ -1,15 +1,24 @@
 #!/bin/bash
 
 [ -s "$PWD/config" ] || \
-(echo 'From the script directory, run: db/debian/all_sql'; exit)
+(echo 'From the script directory, run: db/debian/import_popcon'; exit)
 . $PWD/config # import config
 
+
+SQLFILE="${DIRECTORY[work]}/import_popcon.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
 
 FILE="${DIRECTORY[data]}/debian/all-popcon-results.txt.gz"
 MTIME=$(echo $(date -d "$(stat -c %y $FILE)"))
 
 zcat $FILE | grep '^Package' | cut -d\  -f2- | \
 while read PACKAGE INST VOTE RECENT NOFILES; do
-  echo "insert into SelectorStatistics select null, id, '$MTIME', '$INST' from Selectors where name = '$PACKAGE';"
+  sql "insert into SelectorStatistics select null, id, '$MTIME', '$INST' from Selectors where name = '$PACKAGE';"
 done
+
+cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 

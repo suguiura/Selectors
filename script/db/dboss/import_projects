@@ -5,8 +5,17 @@
 . $PWD/config # import config
 
 
+SQLFILE="${DIRECTORY[work]}/import_projects.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
+
 cat ${DIRECTORY[data]}/dboss/sourceforge/proj_unixname.txt | \
 while read NAME; do
-  echo "insert or ignore into Projects (name) values ('$NAME');"
+  sql "insert or ignore into Projects (name) values ('$NAME');"
 done
+
+cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 

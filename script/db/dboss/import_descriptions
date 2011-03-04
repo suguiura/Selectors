@@ -4,6 +4,14 @@
 (echo 'From the script directory, run: db/dboss/import_descriptions'; exit)
 . $PWD/config # import config
 
+
+SQLFILE="${DIRECTORY[work]}/import_descriptions.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
+
 FILTER="${DIRECTORY[script]}/filter/sf/description.xsl"
 
 for FILE in ${DIRECTORY[data]}/pages/sforge/*; do
@@ -12,6 +20,8 @@ for FILE in ${DIRECTORY[data]}/pages/sforge/*; do
   DESCRIPTION=$(xsltproc --html $FILTER $FILE 2> /dev/null | sed "s/'/''/g")
   [ -n "$DESCRIPTION" ] || continue
   
-  echo "update or ignore Projects set description = '$DESCRIPTION' where name = '$ID';"
+  sql "update or ignore Projects set description = '$DESCRIPTION' where name = '$ID';"
 done
+
+cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 
