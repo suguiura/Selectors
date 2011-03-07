@@ -2,7 +2,7 @@
 -- Author:        Rafael S. Suguiura
 -- Caption:       LDTM DB Model
 -- Project:       Linux Distributions Treasure Map
--- Changed:       2011-02-28 21:00
+-- Changed:       2011-03-07 14:14
 -- Created:       2010-07-28 13:51
 PRAGMA foreign_keys = OFF;
 
@@ -56,11 +56,9 @@ CREATE TABLE "Releases"(
   "architecture_id" INTEGER NOT NULL,
   "version" VARCHAR(255) NOT NULL,
   "date" DATE NOT NULL,
-  "codename" VARCHAR(255),
-  "status" VARCHAR(255),
   "description" VARCHAR(255),
   CONSTRAINT "uq_versions"
-    UNIQUE("distribution_id","architecture_id","version","date","status"),
+    UNIQUE("distribution_id","architecture_id","version","date"),
   CONSTRAINT "fk_distributions"
     FOREIGN KEY("distribution_id")
     REFERENCES "Distributions"("id"),
@@ -138,6 +136,7 @@ CREATE TABLE "Selectors"(
   "id" INTEGER PRIMARY KEY NOT NULL,
   "category_id" INTEGER NOT NULL,
   "maintainer_id" INTEGER NOT NULL,
+  "project_id" INTEGER,
   "name" VARCHAR(255) NOT NULL,
   "version" VARCHAR(255) NOT NULL,
   "origin" VARCHAR(255),
@@ -150,10 +149,14 @@ CREATE TABLE "Selectors"(
     REFERENCES "Categories"("id"),
   CONSTRAINT "fk_maintainers"
     FOREIGN KEY("maintainer_id")
-    REFERENCES "Maintainers"("id")
+    REFERENCES "Maintainers"("id"),
+  CONSTRAINT "fk_projects"
+    FOREIGN KEY("project_id")
+    REFERENCES "Projects"("id")
 );
 CREATE INDEX "Selectors.fk_categories" ON "Selectors"("category_id");
 CREATE INDEX "Selectors.fk_maintainers" ON "Selectors"("maintainer_id");
+CREATE INDEX "Selectors.fk_projects" ON "Selectors"("project_id");
 CREATE TABLE "Selectors_require_Files"(
   "selector_id" INTEGER NOT NULL,
   "file_id" INTEGER NOT NULL,

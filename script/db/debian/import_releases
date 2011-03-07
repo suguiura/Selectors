@@ -5,11 +5,18 @@
 . $PWD/config # import config
 
 
+echo 'Importing Debian releases metadata'
+
 SQLFILE="${DIRECTORY[work]}/import_releases.sql"
 
 function sql
 {
   echo "$1" >> $SQLFILE
+}
+
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 }
 
 BASE=""
@@ -65,7 +72,7 @@ function insert_selector_section
 
 function insert_selector
 {
-  sql "insert or ignore into Selectors select null, Categories.id, Maintainers.id, ${SELECTOR[name]}, ${SELECTOR[version]}, ${SELECTOR[origin]}, ${SELECTOR[homepage]}, ${SELECTOR[description]} from Categories, Maintainers where Maintainers.name = ${SELECTOR[mname]} and Maintainers.email = ${SELECTOR[mmail]} and Categories.name = ${SELECTOR[section]};"
+  sql "insert or ignore into Selectors select null, Categories.id, Maintainers.id, null, ${SELECTOR[name]}, ${SELECTOR[version]}, ${SELECTOR[origin]}, ${SELECTOR[homepage]}, ${SELECTOR[description]} from Categories, Maintainers where Maintainers.name = ${SELECTOR[mname]} and Maintainers.email = ${SELECTOR[mmail]} and Categories.name = ${SELECTOR[section]};"
 }
 
 function insert_selector_into_release
@@ -132,11 +139,14 @@ function parse_release
   parse_selectors
 }
 
-DISTRIBUTION='debian'
+function generate_sql
+{
+  DISTRIBUTION='debian'
+  insert_distribution
+  cat $RELEASE_FILE | parse_release
+}
 
-insert_distribution
-
-cat $RELEASE_FILE | parse_release
-
-cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+echo "[$(date %T)] Generating SQL"; generate_sql
+echo "[$(date %T)] Executing SQL"; execute_sql
+echo "[$(date %T)] Done"
 
