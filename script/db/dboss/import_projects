@@ -27,7 +27,7 @@ function generate_sql
   done
 }
 
-echo "[$(date %T)] Generating SQL"; generate_sql
-echo "[$(date %T)] Executing SQL"; execute_sql
-echo "[$(date %T)] Done"
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
 

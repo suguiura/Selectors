@@ -7,12 +7,12 @@
 
 DIR="${DIRECTORY[data]}/debian/working-release/5.0.8-main-i386"
 
-sh ${DIRECTORY[script]}/db/debian/import_releases -b "$DIR"
-sh ${DIRECTORY[script]}/db/dboss/import_projects
+echo; sh ${DIRECTORY[script]}/db/debian/import_releases -b "$DIR"
+echo; sh ${DIRECTORY[script]}/db/dboss/import_projects
 
-#sh ${DIRECTORY[script]}/db/debian/import_popcon
-#sh ${DIRECTORY[script]}/db/dboss/import_categories
-#sh ${DIRECTORY[script]}/db/dboss/import_descriptions
+#echo; sh ${DIRECTORY[script]}/db/debian/import_popcon
+#echo; sh ${DIRECTORY[script]}/db/dboss/import_categories
+#echo; sh ${DIRECTORY[script]}/db/dboss/import_descriptions
 
 
 ls -lh ${DIRECTORY[work]}/
