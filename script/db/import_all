@@ -15,5 +15,5 @@ echo; sh ${DIRECTORY[script]}/db/dboss/import_projects
 #echo; sh ${DIRECTORY[script]}/db/dboss/import_descriptions
 
 
-ls -lh ${DIRECTORY[work]}/
+echo; ls -lh ${DIRECTORY[work]}/
 
