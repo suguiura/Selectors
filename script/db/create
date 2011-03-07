@@ -10,6 +10,8 @@ VIEWSSQL="${DIRECTORY[db]}/views.sql"
 [ -s $SCHEMASQL ] || (echo "$SCHEMASQL doesn't exist. Aborted."; exit 1) #checks schema SQL
 [ -s $VIEWSSQL ] || (echo "$VIEWSSQL doesn't exist. Aborted."; exit 1) #checks views SQL
 
+echo "Creating database: $DB"
+
 cat $SCHEMASQL | sqlite3 $DB #loads schema SQL
 cat $VIEWSSQL | sqlite3 $DB #loads views SQL
 
