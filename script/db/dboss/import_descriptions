@@ -5,6 +5,8 @@
 . $PWD/config # import config
 
 
+echo 'Importing Dboss descriptions'
+
 SQLFILE="${DIRECTORY[work]}/import_descriptions.sql"
 
 function sql
@@ -12,16 +14,26 @@ function sql
   echo "$1" >> $SQLFILE
 }
 
-FILTER="${DIRECTORY[script]}/filter/sf/description.xsl"
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+}
 
-for FILE in ${DIRECTORY[data]}/pages/sforge/*; do
-  [ -s "$FILE" ] || continue
-  ID=$(basename "$FILE" '.html')
-  DESCRIPTION=$(xsltproc --html $FILTER $FILE 2> /dev/null | sed "s/'/''/g")
-  [ -n "$DESCRIPTION" ] || continue
-  
-  sql "update or ignore Projects set description = '$DESCRIPTION' where name = '$ID';"
-done
+function generate_sql
+{
+  FILTER="${DIRECTORY[script]}/filter/sf/description.xsl"
 
-cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+  for FILE in ${DIRECTORY[data]}/pages/sforge/*; do
+    [ -s "$FILE" ] || continue
+    ID=$(basename "$FILE" '.html')
+    DESCRIPTION=$(xsltproc --html $FILTER $FILE 2> /dev/null | sed "s/'/''/g")
+    [ -n "$DESCRIPTION" ] || continue
+    
+    sql "update or ignore Projects set description = '$DESCRIPTION' where name = '$ID';"
+  done
+}
+
+echo "[$(date %T)] Generating SQL"; generate_sql
+echo "[$(date %T)] Executing SQL"; execute_sql
+echo "[$(date %T)] Done"
 

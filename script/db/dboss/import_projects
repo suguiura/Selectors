@@ -5,6 +5,8 @@
 . $PWD/config # import config
 
 
+echo 'Importing Dboss projects list'
+
 SQLFILE="${DIRECTORY[work]}/import_projects.sql"
 
 function sql
@@ -12,10 +14,20 @@ function sql
   echo "$1" >> $SQLFILE
 }
 
-cat ${DIRECTORY[data]}/dboss/sourceforge/proj_unixname.txt | \
-while read NAME; do
-  sql "insert or ignore into Projects (name) values ('$NAME');"
-done
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+}
 
-cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+function generate_sql
+{
+  cat ${DIRECTORY[data]}/dboss/sourceforge/proj_unixname.txt | \
+  while read NAME; do
+    sql "insert or ignore into Projects (name) values ('$NAME');"
+  done
+}
+
+echo "[$(date %T)] Generating SQL"; generate_sql
+echo "[$(date %T)] Executing SQL"; execute_sql
+echo "[$(date %T)] Done"
 
