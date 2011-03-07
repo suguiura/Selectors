@@ -56,7 +56,7 @@ function insert_architecture
 function insert_release
 {
   for ARCHITECTURE in ${SELECTOR[architectures]}; do
-    sql "insert or ignore into Releases select null, Distributions.id, Architectures.id, ${RELEASE[version]}, ${RELEASE[date]}, ${RELEASE[codename]}, ${RELEASE[status]}, ${RELEASE[description]} from Distributions, Architectures where Distributions.name = '$DISTRIBUTION' and Architectures.name = '$ARCHITECTURE';"
+    sql "insert or ignore into Releases select null, Distributions.id, Architectures.id, ${RELEASE[version]}, ${RELEASE[date]}, ${RELEASE[description]} from Distributions, Architectures where Distributions.name = '$DISTRIBUTION' and Architectures.name = '$ARCHITECTURE';"
   done
 }
 
@@ -146,7 +146,7 @@ function generate_sql
   cat $RELEASE_FILE | parse_release
 }
 
-echo "[$(date %T)] Generating SQL"; generate_sql
-echo "[$(date %T)] Executing SQL"; execute_sql
-echo "[$(date %T)] Done"
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
 
