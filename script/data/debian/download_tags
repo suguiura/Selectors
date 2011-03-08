@@ -5,8 +5,8 @@
 . $PWD/config # import config
 
 
-DIR="${DIRECTORY[data]}/debian/debtags/$(date -u +%F)"
+DIR="${DIRECTORY[data]}/debian/tags/$(date -u +%F)"
 
 mkdir -p "$DIR"
 wget -P "$DIR" http://debtags.alioth.debian.org/tags/tags-current.gz
-
+wget -P "$DIR" http://debtags.alioth.debian.org/tags/vocabulary.gz
