@@ -63,3 +63,29 @@ WHERE
   Releases_have_Selectors.selector_id = Selectors.id and
   Releases_have_Selectors.release_id = ReleasesView.id;
 
+CREATE VIEW "SelectorTagsView" AS
+SELECT
+  Tags.*,
+  Selectors.id as selector_id
+FROM
+  Tags
+JOIN
+  Selectors,
+  Selectors_have_Tags
+WHERE
+  Selectors_have_Tags.tag_id = Tags.id and
+  Selectors_have_Tags.selector_id = Selectors.id;
+
+CREATE VIEW "ProjectTagsView" AS
+SELECT
+  Tags.*,
+  Projects.id as project_id
+FROM
+  Tags
+JOIN
+  Projects,
+  Projects_have_Tags
+WHERE
+  Projects_have_Tags.tag_id = Tags.id and
+  Projects_have_Tags.project_id = Projects.id;
+
