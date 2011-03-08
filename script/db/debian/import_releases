@@ -19,6 +19,15 @@ function execute_sql
   cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 }
 
+function usage
+{
+  echo "usage: $0 [-b <BASE_DIR>] [-c <CONTENT_FILE>] [-r <RELEASE_FILE>]"
+  echo "BASE: base directory where the files below are located"
+  echo "CONTENT_FILE: the .gz file with the Debian metadata: Packages.gz (default) or Sources.gz"
+  echo "RELEASE_FILE: the text file containing the release metadata: Release (default)"
+  exit 1
+}
+
 BASE=""
 CONTENT_FILE="Packages.gz"
 RELEASE_FILE="Release"
@@ -28,13 +37,7 @@ while getopts "b:c:r:" OPT; do
     b) BASE="$OPTARG";;
     c) CONTENT_FILE="$OPTARG";;
     r) RELEASE_FILE="$OPTARG";;
-    ?)
-      echo "usage: $0 [-b <BASE_DIR>] [-c <CONTENT_FILE>] [-r <RELEASE_FILE>]"
-      echo "BASE: base directory where the files below are located"
-      echo "CONTENT_FILE: the .gz file with the Debian metadata: Packages.gz (default) or Sources.gz"
-      echo "RELEASE_FILE: the text file containing the release metadata: Release (default)"
-      exit 1
-    ;;
+    ?) usage ;;
   esac
 done
 

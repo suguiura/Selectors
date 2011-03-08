@@ -5,7 +5,7 @@
 . $PWD/config # import config
 
 
-DIR="${DIRECTORY[data]}/debian/working-release/5.0.8-main-i386"
+DIR="${DIRECTORY[data]}/debian/selectors/working-release/5.0.8-main-i386"
 
 echo; sh ${DIRECTORY[script]}/db/debian/import_releases -b "$DIR"
 echo; sh ${DIRECTORY[script]}/db/dboss/import_projects

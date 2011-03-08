@@ -4,6 +4,7 @@
 (echo 'From the script directory, run: db/create'; exit)
 . $PWD/config # import config
 
+
 SCHEMASQL="${DIRECTORY[db]}/schema.sql"
 VIEWSSQL="${DIRECTORY[db]}/views.sql"
 
