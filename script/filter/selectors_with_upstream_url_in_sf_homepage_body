@@ -1,0 +1,24 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: filter/selectors_with_upstream_url_in_sf_homepage_body'; exit)
+. $PWD/config # import config
+
+
+SELECT="select distinct name from Selectors join Projects using (name)"
+HAS_HOMEPAGE="(homepage is not null and homepage != '')"
+
+sqlite3 $DB "$SELECT where $HAS_HOMEPAGE" \
+| while read ID; do
+  SQL="select homepage from Selectors where name = '$ID'"
+  URL=$(sqlite3 $DB "$SQL" | head -1)
+  QUERY=$(ruby -ruri -e "puts URI.parse('$URL').host" 2> ruby.error)
+  FILE="${DIRECTORY[data]}/pages/sforge/$ID.html"
+
+  if [ -s "$FILE" ] && (cat $FILE | grep -q "$QUERY"); then
+    echo "$ID"
+  fi
+done
+
+
+

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: filter/selectors_with_upstream_url_in_sf_homepage_body'; exit)
+. $PWD/config # import config
+
+
+# has at least one programming language in common
+SELECT="select distinct Selectors.name from Selectors join Projects using (name) join SelectorTagsView as STags, ProjectTagsView as PTags where STags.value = PTags.value and STags.name = 'implemented-in' and PTags.name = 'programming-language' and STags.selector_id = Selectors.id and PTags.project_id = Projects.id"
+
+sqlite3 $DB "$SELECT"
+
+

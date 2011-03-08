@@ -1,0 +1,24 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: filter/selectors_with_sf_in_homepage_body'; exit)
+. $PWD/config # import config
+
+
+SELECT="select distinct name from Selectors join Projects using (name)"
+HAS_HOMEPAGE="(homepage is not null and homepage != '')"
+
+sqlite3 $DB "$SELECT where $HAS_HOMEPAGE" \
+| while read ID; do
+
+
+  QUERY="\W\(\($ID.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$ID\)\)\W"
+  FILE="${DIRECTORY[data]}/pages/ustream/$ID.html"
+
+  if [ -s "$FILE" ] && (cat $FILE | grep -q "$QUERY"); then
+    echo "$ID"
+  fi
+done
+
+
+

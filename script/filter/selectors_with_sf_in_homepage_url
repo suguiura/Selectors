@@ -1,0 +1,13 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: filter/selectors_with_sf_in_homepage_url'; exit)
+. $PWD/config # import config
+
+
+SELECT="select distinct name from Selectors join Projects using (name)"
+HAS_HOMEPAGE="(homepage is not null and homepage != '')"
+HAS_SF_IN_HOMEPAGE="(homepage like '%sourceforge.net%' or homepage like '%sf.net%')"
+
+sqlite3 $DB "$SELECT where $HAS_HOMEPAGE and $HAS_SF_IN_HOMEPAGE"
+
