@@ -1,0 +1,48 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/debian/import_tags'; exit)
+. $PWD/config # import config
+
+
+echo 'Importing Debian selectors tags'
+
+SQLFILE="${DIRECTORY[work]}/import_debian_tags.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
+
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+}
+
+function generate_sql
+{
+  FILE="${DIRECTORY[data]}/debian/tags/working/tags-current.gz"
+
+  [ -s "$FILE" ] || return
+  zcat $FILE \
+  | tr "[:upper:]" "[:lower:]" \
+  | sed 's/: / /g' \
+  | sed 's/, / /g' \
+  | while read NAME LINE; do
+    for FIELD in $LINE; do
+      echo "$FIELD" \
+      | sed 's/::/ /' \
+      | (
+        read TAG VALUE
+        sql "insert or ignore into Tags values (null, '$TAG', '$VALUE');"
+        #TODO: select only Debian selectors
+        sql "insert or ignore into Selectors_have_Tags select Selectors.id, Tags.id from Selectors, Tags where Selectors.name = '$NAME' and Tags.name = '$TAG' and Tags.value = '$VALUE';"
+      )
+    done
+  done
+}
+
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
+

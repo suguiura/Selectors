@@ -1,0 +1,42 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/sforge/import_tags'; exit)
+. $PWD/config # import config
+
+
+echo 'Importing SourceForge selectors tags'
+
+SQLFILE="${DIRECTORY[work]}/import_sforge_tags.sql"
+
+function sql
+{
+  echo "$1" >> $SQLFILE
+}
+
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
+}
+
+function generate_sql
+{
+  FILTER="${DIRECTORY[script]}/filter/sf/details.xsl"
+
+  [ -s "$FILTER" ] || return
+  
+  for FILE in ${DIRECTORY[data]}/pages/sforge/*.html; do
+    NAME=$(basename $FILE .html)
+    xsltproc --html --stringparam 'TEST' "true()" "$FILTER" "$FILE" \
+    | tr "[:upper:]" "[:lower:]" \
+    | while read TAG VALUE; do
+        sql "insert or ignore into Tags values (null, '$TAG', '$VALUE');"
+        sql "insert or ignore into Projects_have_Tags select Projects.id, Tags.id from Projects, Tags where Projects.name = '$NAME' and Tags.name = '$TAG' and Tags.value = '$VALUE';"
+    done
+  done
+}
+
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
+
