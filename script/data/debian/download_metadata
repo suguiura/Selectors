@@ -5,9 +5,20 @@
 . $PWD/config # import config
 
 HOST="ftp.br.debian.org"
-DIR="${DIRECTORY[data]}/debian"
+DIR="${DIRECTORY[data]}/debian/selectors/$(date -u +%F)"
 
-rsync -avm --include "Packages.gz" --include "Sources.gz" --include "Release" --include "*/" --exclude "*" $HOST::debian/dists $DIR
-rsync -avm --include "*.list.gz" --include "*/" --exclude "*" $HOST::debian-cd $DIR
-rsync -avm --include "*.packages" --include "*/" --exclude "*" $HOST::debian-cd $DIR
+mkdir -p "$DIR"
+rsync -avm \
+--include "binary-i386/Packages.gz" \
+--include "binary-i386/Release" \
+--include "source/Sources.gz" \
+--include "source/Release" \
+--include "/*/Release" \
+--include "*/" \
+--exclude "*" \
+$HOST::debian/dists/ $DIR
+
+
+#rsync -avm --include "*.list.gz" --include "*/" --exclude "*" $HOST::debian-cd $DIR
+#rsync -avm --include "*.packages" --include "*/" --exclude "*" $HOST::debian-cd $DIR
 
