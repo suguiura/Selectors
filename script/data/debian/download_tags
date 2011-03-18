@@ -5,8 +5,17 @@
 . $PWD/config # import config
 
 
-DIR="${DIRECTORY[data]}/debian/tags/$(date -u +%F)"
+echo "Downloading Debian Tags"
 
+DIR="${DIRECTORY[data]}/debian/tags/$(date -u +%F)"
 mkdir -p "$DIR"
-wget -P "$DIR" http://debtags.alioth.debian.org/tags/tags-current.gz
-wget -P "$DIR" http://debtags.alioth.debian.org/tags/vocabulary.gz
+
+function download
+{
+  wget -P "$DIR" http://debtags.alioth.debian.org/tags/tags-current.gz
+  wget -P "$DIR" http://debtags.alioth.debian.org/tags/vocabulary.gz
+}
+
+echo "[$(date +%T)] Downloading"; download
+echo "[$(date +%T)] Done"
+
