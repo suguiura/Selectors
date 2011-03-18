@@ -7,10 +7,12 @@
 
 DIR="${DIRECTORY[data]}/debian/selectors/working-release/5.0.8-main-i386"
 
-echo; sh ${DIRECTORY[script]}/db/debian/import_releases -b "$DIR"
 echo; sh ${DIRECTORY[script]}/db/dboss/import_projects
+echo; sh ${DIRECTORY[script]}/db/debian/import_releases -b "$DIR"
+echo; sh ${DIRECTORY[script]}/db/debian/import_popcon
+echo; sh ${DIRECTORY[script]}/db/debian/import_tags
+echo; sh ${DIRECTORY[script]}/db/sforge/import_tags
 
-#echo; sh ${DIRECTORY[script]}/db/debian/import_popcon
 #echo; sh ${DIRECTORY[script]}/db/dboss/import_categories
 #echo; sh ${DIRECTORY[script]}/db/dboss/import_descriptions
 
