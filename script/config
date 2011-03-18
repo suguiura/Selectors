@@ -16,4 +16,5 @@ DIRECTORY[filter]="${DIRECTORY[base]}/filter"
 
 # Files
 DB="${DIRECTORY[work]}/projects.sqlite3"
+DB_FLOSSMOLE_SF="${DIRECTORY[work]}/flossmole_sf.sqlite3"
 
