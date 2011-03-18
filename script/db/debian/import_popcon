@@ -19,7 +19,7 @@ function execute_sql
   cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 }
 
-FILE="${DIRECTORY[data]}/debian/all-popcon-results.txt.gz"
+FILE="${DIRECTORY[data]}/debian/popcon/working/all-popcon-results.txt.gz"
 MTIME=$(echo $(date -d "$(stat -c %y $FILE)"))
 
 function generate_sql
