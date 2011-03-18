@@ -27,7 +27,7 @@ function generate_sql
   
   for FILE in ${DIRECTORY[data]}/pages/sforge/*.html; do
     NAME=$(basename $FILE .html)
-    xsltproc --html --stringparam 'TEST' "true()" "$FILTER" "$FILE" \
+    xsltproc --html "$FILTER" "$FILE" 2> /dev/null \
     | tr "[:upper:]" "[:lower:]" \
     | while read TAG VALUE; do
         sql "insert or ignore into Tags values (null, '$TAG', '$VALUE');"

@@ -13,7 +13,7 @@
   <xsl:variable name="key" select="translate($header, ' :', '-')" />
   <xsl:variable name="value" select="normalize-space(.)" />
     
-  <xsl:if test="not(child::*) and d:evaluate($TEST)">
+  <xsl:if test="not(child::*)">
     <xsl:value-of select="concat($key, ' ', $value, '&#xA;')"/>
   </xsl:if>
 </xsl:template>
