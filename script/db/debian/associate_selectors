@@ -1,61 +1,39 @@
 #!/bin/bash
 
 [ -s "$PWD/config" ] || \
-(echo 'From the script directory, run: report/refine'; exit)
+(echo 'From the script directory, run: db/debian/associate_selectors'; exit)
 . $PWD/config # import config
 
-. ${DIRECTORY[script]}/utils/progress # import progress
-. ${DIRECTORY[script]}/utils/jobqueue # import jobqueue
 
-JOBS=8
-ORIGINLIST="${DIRECTORY[data]}/lists/nosubsourceforge.list"
-DESTLIST="${DIRECTORY[data]}/lists/references.list"
+echo 'Associating selectors to projects'
 
-function check_html
+SQLFILE="${DIRECTORY[work]}/associate_selectors.sql"
+
+function sql
 {
-  REPOSITORY=$1
-  FILE="${DIRECTORY[data]}/pages/$REPOSITORY/$ID.html"
-  if [ -s "$FILE" ] && (cat $FILE | grep -q "$QUERY"); then
-    echo "$ID"
-  fi
+  echo "$1" >> $SQLFILE
 }
 
-function check_upstream_page_for_sf_reference
+function execute_sql
 {
-  QUERY="\W\(\($ID.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$ID\)\)\W"
-  check_html 'ustream'
+  cat $SQLFILE | sqlite3 $DB 2> $SQLFILE.error
 }
 
-function check_sf_page_for_upstream_host_reference
+function filter_selectors
 {
-  SQL="select homepage from Selectors where name = '$ID';"
-  URL=$(sqlite3 $DB "$SQL" | head -1)
-  
-  QUERY=$(ruby -ruri -e "puts URI.parse('$URL').host" 2> ruby.error)
-  check_html 'sforge'
+  sh ${DIRECTORY[script]}/filter/selectors_with_sf_in_homepage_url
+  sh ${DIRECTORY[script]}/filter/selectors_with_sf_in_homepage_body
+  sh ${DIRECTORY[script]}/filter/selectors_with_upstream_url_in_sf_homepage_body
 }
 
-function check
+function generate_sql
 {
-  ID="$1"
-  check_upstream_page_for_sf_reference >> $DESTLIST
-  check_sf_page_for_upstream_host_reference >> $DESTLIST
+  filter_selectors | while read NAME; do
+    sql "update or ignore Selectors set project_id = (select id from Projects where name = '$NAME') where name = '$NAME';"
+  done
 }
 
-FINISH="kill -TERM -$$; rm -fr $TMPFILES; echo -e '\nMay the Force be with you!'"
-trap "$FINISH" EXIT
-
-rm -fr $DESTLIST
-
-date
-cat $ORIGINLIST | run_queue $JOBS "check"
-#echo "acpitool" | run_queue $JOBS "check"
-
-echo; date; echo "sorting..."
-sort $DESTLIST | uniq > $DESTLIST.sort; mv $DESTLIST.sort $DESTLIST
-  
-echo
-echo "Total found: $(cat $DESTLIST | wc -l)"
-
-rm -fr $TMPFILES
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
 
