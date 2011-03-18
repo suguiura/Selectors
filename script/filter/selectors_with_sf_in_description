@@ -1,0 +1,13 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: filter/selectors_with_sf_in_description'; exit)
+. $PWD/config # import config
+
+
+SELECT="select distinct name from Selectors"
+HAS_DESCRIPTION="(description is not null and description != '')"
+HAS_SF_IN_DESCRIPTION="(description like '%sourceforge.net/projects/'||name||'%' or description like '%'||name||'.sourceforge.net%' or description like '%'||name||'.sf.net%' or description like '%sf.net/projects/'||name||'%')"
+
+sqlite3 $DB "$SELECT where $HAS_DESCRIPTION and $HAS_SF_IN_DESCRIPTION"
+
