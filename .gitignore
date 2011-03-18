@@ -1,3 +1,7 @@
 
+# Ignore .gitignore itself
+.gitignore
+
 # Ignore editor temporary files
 *~
+
