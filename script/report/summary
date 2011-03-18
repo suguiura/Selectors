@@ -5,72 +5,47 @@
 . $PWD/config # import config
 
 
-declare -A SELECT=(
-  [projects]="select distinct name from Projects"
-  [selectors]="select distinct name from Selectors"
-  [join]="select distinct name from Selectors join Projects using (name)"
-)
-
-declare -A CONDITION=(
-  [has_homepage]="(homepage is not null and homepage != '')"
-  [has_homepage_with_sf]="(homepage like '%sourceforge.net%' or homepage like '%sf.net%')"
-  [has_description_with_sf]="(description like '%sourceforge.net/projects/'||name||'%' or description like '%'||name||'.sourceforge.net%' or description like '%'||name||'.sf.net%' or description like '%sf.net/projects/'||name||'%')"
-)
-
-SQL="${SELECT[join]} where ${CONDITION[has_homepage]} and not ${CONDITION[has_homepage_with_sf]}"
-sqlite3 $DB "select name from ($SQL);" | sort | \
-diff --changed-group-format='%=' --unchanged-group-format='' \
-- ${DIRECTORY[data]}/lists/references.list > ${DIRECTORY[data]}/lists/noreferences.list
-
-
-function report
+function projects
 {
-  FILE="${DIRECTORY[data]}/lists/$1.list"
-  [ -z "$SQL" ] || (sqlite3 $DB "$SQL;" | sort | uniq > $FILE)
-  echo "$DESCRIPTION" $(cat $FILE | wc -l) "($1)"
+  sqlite3 $DB "select count(distinct name) from Projects;"
 }
 
-SQL="${SELECT[projects]}"
-DESCRIPTION='Projects (SourceForge):'
-report 'projects'
+function selectors
+{
+  sqlite3 $DB "select count(distinct name) from Selectors;"
+}
 
-SQL="${SELECT[selectors]}"
-DESCRIPTION='Selectors (Debian 5.0.6-i386-main):'
-report 'selectors'
+function projects_and_selectors_with_common_names
+{
+  sqlite3 $DB "select count(distinct name) from Projects join Selectors using (name)"
+}
 
-SQL="${SELECT[projects]} union ${SELECT[selectors]} except ${SELECT[join]}"
-DESCRIPTION='Identifiers (project/selector) symmetric difference:'
-report 'difference'
+function selectors_with_sf_in_homepage_url
+{
+  sh ${DIRECTORY[script]}/filter/selectors_with_sf_in_homepage_url | wc -l
+}
 
-SQL="${SELECT[join]}"
-DESCRIPTION='Identifiers (project/selector) intersection:'
-report 'intersection'
+function selectors_with_sf_in_homepage_body
+{
+  sh ${DIRECTORY[script]}/filter/selectors_with_sf_in_homepage_body | wc -l
+}
 
-SQL="${SELECT[join]} where not ${CONDITION[has_homepage]}"
-DESCRIPTION='... seletor without homepage:'
-report 'nohomepage'
+function selectors_with_sf_in_description
+{
+  sh ${DIRECTORY[script]}/filter/selectors_with_sf_in_description | wc -l
+}
 
-SQL="${SELECT[join]} where ${CONDITION[has_homepage]}"
-DESCRIPTION='... seletor with homepage:'
-report 'homepage'
+function selectors_with_upstream_host_in_sf_homepage_body
+{
+  sh ${DIRECTORY[script]}/filter/selectors_with_upstream_host_in_sf_homepage_body | wc -l
+}
 
-SQL="${SELECT[join]} where ${CONDITION[has_homepage_with_sf]}"
-DESCRIPTION='... ... seletor URL with SF substring:'
-report 'subsourceforge'
+echo "Projects in database: $(projects)"
+echo "Selectors in database: $(selectors)"
+echo "Selectors with a project with the same name in database: $(projects_and_selectors_with_common_names)"
+echo "Selectors with SourceForge in homepage url: $(selectors_with_sf_in_homepage_url)"
+echo "Selectors with SourceForge in homepage body: $(selectors_with_sf_in_homepage_body)"
+echo "Selectors with SourceForge in description: $(selectors_with_sf_in_description)"
+echo "Selectors with upstream host reference in SourceForge homepage body: $(selectors_with_upstream_host_in_sf_homepage_body)"
 
-SQL="${SELECT[join]} where ${CONDITION[has_homepage]} and not ${CONDITION[has_homepage_with_sf]}"
-DESCRIPTION='... ... seletor URL without SF substring:'
-report 'nosubsourceforge'
-
-SQL=''
-DESCRIPTION='... ... ... homepage with references to counterpart:'
-report 'references'
-
-SQL=''
-DESCRIPTION='... ... ... homepage without references to counterpart:'
-report 'noreferences'
-
-SQL="${SELECT[join]} where ${CONDITION[has_description_with_sf]}"
-DESCRIPTION='... description with SF substring:'
-report 'description_with_sf'
 

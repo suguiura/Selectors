@@ -5,7 +5,7 @@
 . $PWD/config # import config
 
 
-SELECT="select distinct name from Selectors join Projects using (name)"
+SELECT="select distinct name from Selectors"
 HAS_HOMEPAGE="(homepage is not null and homepage != '')"
 HAS_SF_IN_HOMEPAGE="(homepage like '%sourceforge.net%' or homepage like '%sf.net%')"
 

@@ -5,18 +5,16 @@
 . $PWD/config # import config
 
 
-SELECT="select distinct name from Selectors join Projects using (name)"
+SELECT="select distinct name from Selectors"
 HAS_HOMEPAGE="(homepage is not null and homepage != '')"
 
 sqlite3 $DB "$SELECT where $HAS_HOMEPAGE" \
-| while read ID; do
-
-
-  QUERY="\W\(\($ID.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$ID\)\)\W"
-  FILE="${DIRECTORY[data]}/pages/ustream/$ID.html"
+| while read NAME; do
+  QUERY="\W\(\($NAME.s\(f\|ourceforge\).net\)\|\(s\(f\|ourceforge\).net/projects/$NAME\)\)\W"
+  FILE="${DIRECTORY[data]}/pages/ustream/$NAME.html"
 
   if [ -s "$FILE" ] && (cat $FILE | grep -q "$QUERY"); then
-    echo "$ID"
+    echo "$NAME"
   fi
 done
 
