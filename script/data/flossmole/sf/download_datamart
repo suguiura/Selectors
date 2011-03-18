@@ -1,0 +1,15 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: data/flossmole/sf/download_datamart'; exit)
+. $PWD/config # import config
+
+
+DIR="${DIRECTORY[data]}/flossmole/sf"
+FILE="datamart_sf_other.2009-Dec.sql.bz2"
+LINK="datamart_sf_other.working.sql.bz2"
+
+mkdir -p "$DIR"
+wget -P "$DIR" http://flossmole.googlecode.com/files/$FILE
+ln -s $DIR/$FILE $DIR/$LINK
+

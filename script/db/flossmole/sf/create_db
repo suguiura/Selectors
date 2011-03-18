@@ -1,0 +1,32 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/flossmole/sf/create_db'; exit)
+. $PWD/config # import config
+
+
+echo "Creating FLOSSmole's SourceForge database."
+
+SQLFILE="${DIRECTORY[db]}/flossmole_sf.schema.sql"
+
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB_FLOSSMOLE_SF 2> $SQLFILE.error
+}
+
+function generate_sql
+{
+  FILE="${DIRECTORY[data]}/flossmole/sf/datamart_sf_other.working.sql.bz2"
+
+  bzcat $FILE \
+  | grep -v '^INSERT' \
+  | grep -v '^LOCK' \
+  | grep -v '^UNLOCK' \
+  | sqlt -f MySQL -t SQLite - > $SQLFILE
+}
+
+rm -f $SQLFILE{.error,} $DB_FLOSSMOLE_SF
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
+

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: db/flossmole/sf/import_datamart'; exit)
+. $PWD/config # import config
+
+
+echo "Importing FLOSSmole's SourceForge Datamart"
+
+SQLFILE="${DIRECTORY[work]}/import_flossmole_sf_datamart.sql"
+
+function execute_sql
+{
+  cat $SQLFILE | sqlite3 $DB_FLOSSMOLE_SF 2> $SQLFILE.error
+}
+
+function generate_sql
+{
+  FILE="${DIRECTORY[data]}/flossmole/sf/datamart_sf_other.working.sql.bz2"
+
+  bzcat $FILE \
+  | grep '^INSERT' \
+  | perl -pe 'if (/^(INSERT.+?)\(/) {$a=$1;s/\),\(/\);\n$a\(/g;}' \
+  | sed "s/^INSERT INTO \`\([^\`]\)\`/INSERT OR IGNORE INTO '\1'/" \
+  > $SQLFILE
+}
+
+rm -f $SQLFILE{.error,}
+echo "[$(date +%T)] Generating SQL"; generate_sql
+echo "[$(date +%T)] Executing SQL"; execute_sql
+echo "[$(date +%T)] Done"
+
