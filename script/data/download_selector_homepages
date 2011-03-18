@@ -1,0 +1,45 @@
+#!/bin/bash
+
+[ -s "$PWD/config" ] || \
+(echo 'From the script directory, run: data/download_selector_homepages'; exit)
+. $PWD/config # import config
+
+
+echo "Downloading selectors homepage"
+
+DIR="${DIRECTORY[data]}/pages/selector/$(date -u +%F)"
+mkdir -p "$DIR"
+
+function use_wget
+{
+  read NAME URL;
+  FILE="$DIR/$NAME.html"
+  [ -s "$FILE" ] && return
+  trap "rm -fr $FILE.tmp" EXIT
+  URL=$(echo "$URL" | sed 's/<\(.*\)>/\1/g' | sed 's/.*http:\/\/>//g')
+  wget -T 30 -t 3 -qO - -B "$URL" "$URL" > $FILE.tmp && mv $FILE.tmp $FILE
+  rm -fr $FILE.tmp
+}
+
+function job
+{
+  ID=$1
+  sqlite3 $DB "select name, homepage from Selectors where id = '$ID';" \
+  | tr "|" " " \
+  | use_wget
+}
+
+function download
+{
+  . ${DIRECTORY[script]}/utils/progress # import progress
+  . ${DIRECTORY[script]}/utils/jobqueue # import jobqueue
+
+  trap "kill -TERM -$$" EXIT
+
+  SQL="select id from Selectors where homepage is not null and homepage != '';"
+  sqlite3 $DB "$SQL" | run_queue 8 "job"
+}
+
+echo "[$(date +%T)] Downloading"; download
+echo "[$(date +%T)] Done"
+
