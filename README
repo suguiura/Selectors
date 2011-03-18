@@ -9,3 +9,7 @@ goal is to map the metadata of software packages from those distributions.
 All the information is from public domain, hosted at Linux Distributions
 servers, and acessible from any computer.
 
+
+
+Dependencies
+>=bash-4, sqlite3, wget, recode, rsync, gzip, libxslt, ruby, sql-translator
